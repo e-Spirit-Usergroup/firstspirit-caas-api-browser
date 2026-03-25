@@ -15,7 +15,7 @@ function SetupNavbar({ className, ...props }: Props) {
 			{...props}
 		>
 			<div className="flex gap-4">
-				<h1 className="text-xl font-bold">{`FirstSpirit CaaS API Browser v${version}`}</h1>
+				<h1 className="text-xl font-bold">{`FirstSpirit CaaS API Browser ${version}`}</h1>
 			</div>
 			<div className="sm:ml-auto flex gap-0 items-center justify-between">
 				<LanguageSwitch />

@@ -1,9 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { ModeType } from "@/types/mode";
 
 interface SettingsState {
 	locale: string | null;
 	setLocale: (locale: string | null) => void;
+	mode: ModeType;
+	setMode: (mode: ModeType) => void;
 	np: boolean;
 	setNp: (np: boolean) => void;
 	rep: boolean;
@@ -18,6 +21,8 @@ export const useSettingsStore = create<SettingsState>()(
 		(set) => ({
 			locale: null,
 			setLocale: (locale) => set({ locale }),
+			mode: "preview",
+			setMode: (mode) => set({ mode }),
 			np: true,
 			setNp: (np) => set({ np }),
 			rep: false,
@@ -27,6 +32,7 @@ export const useSettingsStore = create<SettingsState>()(
 			clearStore: () =>
 				set({
 					locale: null,
+					mode: "preview",
 					np: true,
 					rep: false,
 					count: true,
@@ -34,7 +40,7 @@ export const useSettingsStore = create<SettingsState>()(
 		}),
 		{
 			name: "settings-store",
-			version: 1.1,
+			version: 1.2,
 		},
 	),
 );

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -23,7 +23,9 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { applyModeToCaasUrl } from "@/lib/caas-url";
 import {
+	getActiveProjectFromState,
 	isCaaSConfigStoreInitialized,
 	useCaaSConfigStore,
 } from "@/stores/caas-config-store";
@@ -59,12 +61,17 @@ function RouteComponent() {
 	const selectNameOrIdentifierId = useId();
 	const filterSelectId = useId();
 
-	const { databaseSchemas, projectSetupData: projectSettings } =
-		useCaaSConfigStore();
+	const { customers, activeSelection } = useCaaSConfigStore();
+	const projectSettings = useMemo(
+		() => getActiveProjectFromState({ customers, activeSelection }),
+		[customers, activeSelection],
+	);
+	const databaseSchemas = projectSettings?.databaseSchemas;
 	const [responseData, setResponseData] = useState(null);
 	const [currentUrl, setCurrentUrl] = useState<string>("");
+	const hasExecutedRequestRef = useRef(false);
 	const { register, handleSubmit, setValue, watch } = useForm<FormData>();
-	const { locale, np, rep, count } = useSettingsStore();
+	const { locale, setLocale, mode, np, rep, count } = useSettingsStore();
 	const navigate = useNavigate();
 
 	const [pageInfos, setPageInfos] = useState<PageInfos>({
@@ -83,9 +90,46 @@ function RouteComponent() {
 			: navigate({ to: "/setup" });
 	}, [navigate]);
 
+	useEffect(() => {
+		// When the active project changes, clear stale request/result state.
+		setCurrentUrl("");
+		setResponseData(null);
+		hasExecutedRequestRef.current = false;
+		setPageInfos({
+			totalPages: 0,
+			currentPage: 1,
+		});
+	}, [
+		activeSelection?.customerName,
+		activeSelection?.stage,
+		activeSelection?.projectName,
+	]);
+
+	useEffect(() => {
+		const projectLocales = projectSettings?.locales ?? [];
+		if (!projectLocales.length) {
+			return;
+		}
+		if (!locale || !projectLocales.includes(locale)) {
+			setLocale(projectLocales[0]);
+		}
+	}, [projectSettings?.locales, locale, setLocale]);
+
+	useEffect(() => {
+		if (!hasExecutedRequestRef.current) {
+			return;
+		}
+		handleSubmit(onSubmit)();
+	}, [mode, locale, handleSubmit]);
+
 	async function onSubmit(data: FormData) {
-		//@ts-expect-error - we check this before allowing to proceed to this step
-		const url = new URL(projectSettings.caasUrl);
+		if (!projectSettings?.caasUrl || !projectSettings?.caasApiKey) {
+			toast.error(t("app.form.error.missingUrl"));
+			return;
+		}
+		hasExecutedRequestRef.current = true;
+		const modeAwareCaasUrl = applyModeToCaasUrl(projectSettings.caasUrl, mode);
+		const url = new URL(modeAwareCaasUrl);
 
 		const searchParams = new URLSearchParams();
 
@@ -408,7 +452,7 @@ function RouteComponent() {
 											.flatMap((schema) =>
 												schema.entityTypeNames?.map((entityType) => (
 													<SelectItem
-														key={"${schema.name}-${entityType}"}
+														key={`${schema.name}-${entityType}`}
 														value={entityType}
 													>
 														<span className="inline-flex items-center gap-2">

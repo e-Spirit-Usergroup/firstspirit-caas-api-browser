@@ -11,8 +11,14 @@
 			"step1": {
 				"form": {
 					"customerName": {
-						"label": "Nome cliente",
-						"placeholder": "Nome cliente",
+						"label": "Cliente",
+						"placeholder": "Cliente",
+						"existingPlaceholder": "Seleziona un cliente esistente",
+						"emptyState": "Non ci sono ancora clienti esistenti. Inserisci un nuovo nome cliente.",
+						"mode": {
+							"newCustomer": "Nuovo",
+							"existingCustomer": "Esistente"
+						},
 						"validation": {
 							"required": "Questo campo è obbligatorio"
 						}
@@ -20,16 +26,17 @@
 					"stage": {
 						"label": "Stage",
 						"options": {
-							"dev": "dev",
-							"qa": "qa",
-							"prod": "prod"
+							"dev": "Dev",
+							"qa": "QA",
+							"prod": "Prod"
 						}
 					},
 					"projectName": {
-						"label": "Nome progetto",
-						"placeholder": "Nome progetto",
+						"label": "Progetto",
+						"placeholder": "Progetto",
 						"validation": {
-							"required": "Questo campo è obbligatorio"
+							"required": "Questo campo è obbligatorio",
+							"duplicate": "Questo progetto esiste gia per il cliente e lo stage selezionati"
 						}
 					},
 					"caasApiKey": {
@@ -41,7 +48,7 @@
 					},
 					"caasUrl": {
 						"label": "URL CaaS",
-						"placeholder": "URL CaaS",
+						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "Questo campo è obbligatorio"
 						}
@@ -119,12 +126,22 @@
 			"dropYourConfigFile": "Rilascia qui il tuo file di configurazione",
 			"submitBtn": "Usa configurazione",
 			"toast": {
-				"configLoadedSuccessfully": "Configurazione caricata con successo"
+				"configLoadedSuccessfully": "Configurazione caricata con successo",
+				"invalidDecryptionPassword": "Password non valida. Impossibile decrittare le API key cifrate."
+			},
+			"decryptDialog": {
+				"title": "Decritta le API key importate",
+				"description": "Questo file contiene API key CaaS cifrate. Inserisci la password usata durante l'esportazione.",
+				"passwordPlaceholder": "Inserisci password di decrittazione",
+				"cancel": "Annulla",
+				"confirm": "Decritta e importa"
 			}
 		}
 	},
 	"app": {
 		"form": {
+			"customer": "Cliente",
+			"stage": "Stage",
 			"project": "Progetto",
 			"decodedUrl": "URL decodificato",
 			"noUrlToDisplay": "Nessun URL da visualizzare",
@@ -163,6 +180,13 @@
 				"locale": {
 					"label": "Locale"
 				},
+				"mode": {
+					"label": "Mode",
+					"options": {
+						"preview": "Preview",
+						"release": "Release"
+					}
+				},
 				"queryParams": {
 					"label": "Parametri di query",
 					"np": {
@@ -178,8 +202,40 @@
 						"tooltip": "Aggiunge alla risposta metadati con informazioni sul numero di elementi e di pagine. Necessario affinché la paginazione funzioni correttamente, ma rallenta la richiesta."
 					}
 				},
-				"switchProject": "Cambia progetto",
-				"downloadConfig": "Scarica configurazione"
+				"update": {
+					"label": "Aggiornamenti",
+					"checkButton": "Controlla aggiornamenti",
+					"checking": "Controllo aggiornamenti in corso...",
+					"currentVersion": "Versione corrente: {{version}}",
+					"upToDate": "L'app e aggiornata (corrente: {{currentVersion}}, ultima: {{latestVersion}}).",
+					"updateAvailable": "E disponibile una versione piu recente (corrente: {{currentVersion}}, ultima: {{latestVersion}}).",
+					"viewRelease": "Apri release",
+					"checkFailed": "Impossibile controllare gli aggiornamenti in questo momento."
+				},
+				"addProject": "Aggiungi progetto",
+				"downloadConfig": "Scarica configurazione",
+				"manageProjects": "Gestisci progetti"
+			},
+			"manageProjects": {
+				"title": "Gestisci progetti",
+				"subtitle": "Controlla e gestisci i progetti configurati.",
+				"actions": "Azioni",
+				"updateProject": "Aggiorna progetto",
+				"removeProject": "Rimuovi progetto",
+				"deleteSelected": "Rimuovi selezionati",
+				"exportSelected": "Esporta selezionati",
+				"exportEncryptionTitle": "Cifra le API key prima dell'esportazione",
+				"exportEncryptionDescription": "Inserisci una password per cifrare tutte le API key CaaS in questo file esportato.",
+				"exportPasswordPlaceholder": "Inserisci password di cifratura",
+				"exportConfirm": "Cifra ed esporta",
+				"exportEncryptionFailed": "Impossibile cifrare i progetti selezionati. Riprova.",
+				"selectProject": "Seleziona progetto {{projectName}}",
+				"confirm": "Conferma",
+				"cancel": "Annulla",
+				"addNewProject": "Aggiungi nuovo progetto",
+				"emptyState": "Nessun progetto configurato.",
+				"confirmRemove": "Rimuovere il progetto '{{projectName}}' da {{customerName}} ({{stage}})?",
+				"confirmRemoveSelected": "Rimuovere {{count}} progetto(i) selezionato(i)?"
 			},
 			"executeRequest": "Esegui"
 		}

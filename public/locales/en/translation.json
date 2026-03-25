@@ -11,8 +11,14 @@
 			"step1": {
 				"form": {
 					"customerName": {
-						"label": "Customer Name",
-						"placeholder": "Customer Name",
+						"label": "Customer",
+						"placeholder": "Customer",
+						"existingPlaceholder": "Select an existing customer",
+						"emptyState": "No existing customers yet. Enter a new customer name.",
+						"mode": {
+							"newCustomer": "New",
+							"existingCustomer": "Existing"
+						},
 						"validation": {
 							"required": "This field is required"
 						}
@@ -20,16 +26,17 @@
 					"stage": {
 						"label": "Stage",
 						"options": {
-							"dev": "dev",
-							"qa": "qa",
-							"prod": "prod"
+							"dev": "Dev",
+							"qa": "QA",
+							"prod": "Prod"
 						}
 					},
 					"projectName": {
-						"label": "Project Name",
-						"placeholder": "Project Name",
+						"label": "Project",
+						"placeholder": "Project",
 						"validation": {
-							"required": "This field is required"
+							"required": "This field is required",
+							"duplicate": "This project already exists for the selected customer and stage"
 						}
 					},
 					"caasApiKey": {
@@ -41,7 +48,7 @@
 					},
 					"caasUrl": {
 						"label": "CaaS URL",
-						"placeholder": "CaaS URL",
+						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "This field is required"
 						}
@@ -119,12 +126,22 @@
 			"dropYourConfigFile": "Drop your configuration file here",
 			"submitBtn": "Use Configuration",
 			"toast": {
-				"configLoadedSuccessfully": "Configuration loaded successfully"
+				"configLoadedSuccessfully": "Configuration loaded successfully",
+				"invalidDecryptionPassword": "Invalid password. Could not decrypt encrypted API keys."
+			},
+			"decryptDialog": {
+				"title": "Decrypt imported API keys",
+				"description": "This file contains encrypted CaaS API keys. Enter the password used during export.",
+				"passwordPlaceholder": "Enter decryption password",
+				"cancel": "Cancel",
+				"confirm": "Decrypt and import"
 			}
 		}
 	},
 	"app": {
 		"form": {
+			"customer": "Customer",
+			"stage": "Stage",
 			"project": "Project",
 			"decodedUrl": "Decoded URL",
 			"noUrlToDisplay": "No URL to display",
@@ -163,6 +180,13 @@
 				"locale": {
 					"label": "Locale"
 				},
+				"mode": {
+					"label": "Mode",
+					"options": {
+						"preview": "Preview",
+						"release": "Release"
+					}
+				},
 				"queryParams": {
 					"label": "Query Parameter",
 					"np": {
@@ -178,8 +202,40 @@
 						"tooltip": "Adds metadata to the response containing information about the number of elements and pages. Needed for pagination to work correctly, but slows down the request."
 					}
 				},
-				"switchProject": "Switch Project",
-				"downloadConfig": "Download Config"
+				"update": {
+					"label": "Updates",
+					"checkButton": "Check for updates",
+					"checking": "Checking for updates...",
+					"currentVersion": "Current version: {{version}}",
+					"upToDate": "You are up to date (current: {{currentVersion}}, latest: {{latestVersion}}).",
+					"updateAvailable": "A newer version is available (current: {{currentVersion}}, latest: {{latestVersion}}).",
+					"viewRelease": "View release",
+					"checkFailed": "Unable to check for updates right now."
+				},
+				"addProject": "Add Project",
+				"downloadConfig": "Download Config",
+				"manageProjects": "Manage Projects"
+			},
+			"manageProjects": {
+				"title": "Manage Projects",
+				"subtitle": "Review and maintain configured projects.",
+				"actions": "Actions",
+				"updateProject": "Update project",
+				"removeProject": "Remove project",
+				"deleteSelected": "Delete selected",
+				"exportSelected": "Export selected",
+				"exportEncryptionTitle": "Encrypt API keys before export",
+				"exportEncryptionDescription": "Enter a password to encrypt all CaaS API keys in this export file.",
+				"exportPasswordPlaceholder": "Enter encryption password",
+				"exportConfirm": "Encrypt and export",
+				"exportEncryptionFailed": "Could not encrypt selected projects. Please try again.",
+				"selectProject": "Select project {{projectName}}",
+				"confirm": "Confirm",
+				"cancel": "Cancel",
+				"addNewProject": "Add new project",
+				"emptyState": "No projects configured yet.",
+				"confirmRemove": "Remove project '{{projectName}}' from {{customerName}} ({{stage}})?",
+				"confirmRemoveSelected": "Remove {{count}} selected project(s)?"
 			},
 			"executeRequest": "Execute"
 		}

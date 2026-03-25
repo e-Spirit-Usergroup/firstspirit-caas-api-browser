@@ -1,3 +1,5 @@
+import type { StageType } from "./stage";
+
 export type DatabaseSchema = {
 	name: string;
 	entityTypeNames: string[] | null;
@@ -5,12 +7,28 @@ export type DatabaseSchema = {
 
 export type Locales = string[];
 
-export type Stage = "dev" | "qa" | "prod";
-
 export type ProjectSetupData = {
-	customerName: string | null;
-	stage: Stage | null;
-	projectName: string | null;
-	caasApiKey: string | null;
-	caasUrl: string | null;
+	customerName: string;
+	stage: StageType;
+	projectName: string;
+	caasApiKey: string;
+	caasUrl: string;
+};
+
+export type ProjectConfig = ProjectSetupData & {
+	databaseSchemas: DatabaseSchema[] | null;
+	locales: Locales;
+};
+
+export type StageProjects = Record<StageType, ProjectConfig[]>;
+
+export type CustomerConfig = {
+	customerName: string;
+	stages: StageProjects;
+};
+
+export type ActiveProjectSelection = {
+	customerName: string;
+	stage: StageType;
+	projectName: string;
 };

@@ -11,25 +11,32 @@
 			"step1": {
 				"form": {
 					"customerName": {
-						"label": "Kundenname",
-						"placeholder": "Kundenname",
+						"label": "Kunde",
+						"placeholder": "Kunde",
+						"existingPlaceholder": "Vorhandenen Kunden auswählen",
+						"emptyState": "Noch keine vorhandenen Kunden. Geben Sie einen neuen Kundennamen ein.",
+						"mode": {
+							"newCustomer": "Neu",
+							"existingCustomer": "Vorhanden"
+						},
 						"validation": {
 							"required": "Dieses Feld ist erforderlich"
 						}
 					},
 					"stage": {
-						"label": "Stufe",
+						"label": "Stage",
 						"options": {
-							"dev": "dev",
-							"qa": "qa",
-							"prod": "prod"
+							"dev": "Dev",
+							"qa": "QA",
+							"prod": "Prod"
 						}
 					},
 					"projectName": {
-						"label": "Projektname",
-						"placeholder": "Projektname",
+						"label": "Projekt",
+						"placeholder": "Projekt",
 						"validation": {
-							"required": "Dieses Feld ist erforderlich"
+							"required": "Dieses Feld ist erforderlich",
+							"duplicate": "Dieses Projekt existiert bereits fuer den ausgewaehlten Kunden und die Stage"
 						}
 					},
 					"caasApiKey": {
@@ -41,7 +48,7 @@
 					},
 					"caasUrl": {
 						"label": "CaaS URL",
-						"placeholder": "CaaS URL",
+						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "Dieses Feld ist erforderlich"
 						}
@@ -119,12 +126,22 @@
 			"dropYourConfigFile": "Legen Sie Ihre Konfigurationsdatei hier ab",
 			"submitBtn": "Konfiguration benutzen",
 			"toast": {
-				"configLoadedSuccessfully": "Konfiguration erfolgreich geladen"
+				"configLoadedSuccessfully": "Konfiguration erfolgreich geladen",
+				"invalidDecryptionPassword": "Ungultiges Passwort. Die verschlusselten API-Keys konnten nicht entschlusselt werden."
+			},
+			"decryptDialog": {
+				"title": "Importierte API-Keys entschlusseln",
+				"description": "Diese Datei enthalt verschlusselte CaaS API-Keys. Bitte gib das beim Export verwendete Passwort ein.",
+				"passwordPlaceholder": "Entschlusselungs-Passwort eingeben",
+				"cancel": "Abbrechen",
+				"confirm": "Entschlusseln und importieren"
 			}
 		}
 	},
 	"app": {
 		"form": {
+			"customer": "Kunde",
+			"stage": "Stage",
 			"project": "Projekt",
 			"decodedUrl": "Dekodierte URL",
 			"noUrlToDisplay": "Keine URL zum Anzeigen",
@@ -163,6 +180,13 @@
 				"locale": {
 					"label": "Locale"
 				},
+				"mode": {
+					"label": "Mode",
+					"options": {
+						"preview": "Preview",
+						"release": "Release"
+					}
+				},
 				"queryParams": {
 					"label": "Query Parameter",
 					"np": {
@@ -178,8 +202,40 @@
 						"tooltip": "Fügt der Antwort Metadaten mit Informationen über die Anzahl der Elemente und Seiten hinzu. Wird für eine funktionierende Paginierung benötigt, verlangsamt die Anfrage jedoch."
 					}
 				},
-				"switchProject": "Projekt wechseln",
-				"downloadConfig": "Konfiguration herunterladen"
+				"update": {
+					"label": "Updates",
+					"checkButton": "Nach Updates suchen",
+					"checking": "Suche nach Updates...",
+					"currentVersion": "Aktuelle Version: {{version}}",
+					"upToDate": "Du bist auf dem neuesten Stand (aktuell: {{currentVersion}}, neueste: {{latestVersion}}).",
+					"updateAvailable": "Eine neuere Version ist verfugbar (aktuell: {{currentVersion}}, neueste: {{latestVersion}}).",
+					"viewRelease": "Release ansehen",
+					"checkFailed": "Updates konnen derzeit nicht gepruft werden."
+				},
+				"addProject": "Projekt hinzufügen",
+				"downloadConfig": "Konfiguration herunterladen",
+				"manageProjects": "Projekte verwalten"
+			},
+			"manageProjects": {
+				"title": "Projekte verwalten",
+				"subtitle": "Konfigurierte Projekte anzeigen und pflegen.",
+				"actions": "Aktionen",
+				"updateProject": "update",
+				"removeProject": "entfernen",
+				"deleteSelected": "auswahl entfernen",
+				"exportSelected": "auswahl exportieren",
+				"exportEncryptionTitle": "API-Keys vor dem Export verschlusseln",
+				"exportEncryptionDescription": "Gib ein Passwort ein, um alle CaaS API-Keys in dieser Exportdatei zu verschlusseln.",
+				"exportPasswordPlaceholder": "Verschlusselungs-Passwort eingeben",
+				"exportConfirm": "Verschlusseln und exportieren",
+				"exportEncryptionFailed": "Die ausgewahlten Projekte konnten nicht verschlusselt werden. Bitte erneut versuchen.",
+				"selectProject": "Projekt {{projectName}} auswahlen",
+				"confirm": "Bestatigen",
+				"cancel": "Abbrechen",
+				"addNewProject": "Neues Projekt hinzufügen",
+				"emptyState": "Noch keine Projekte konfiguriert.",
+				"confirmRemove": "Projekt '{{projectName}}' aus {{customerName}} ({{stage}}) entfernen?",
+				"confirmRemoveSelected": "{{count}} ausgewahlte(s) Projekt(e) entfernen?"
 			},
 			"executeRequest": "Ausführen"
 		}

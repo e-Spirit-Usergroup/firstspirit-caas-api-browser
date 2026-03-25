@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
-import { useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import {
 	type SubmitHandler,
 	useForm,
@@ -21,14 +21,17 @@ import {
 } from "@/components/ui/select";
 import { useCaaSConfigStore } from "@/stores/caas-config-store";
 import type { ConnectionStatusType } from "@/types/connection-status";
+import { stageTypes } from "@/types/stage";
 import { type Inputs, schema } from "./schema";
 
 function Step1() {
-	const { setProjectSetupData: setProjectSettings } = useCaaSConfigStore();
+	const { setWizardProjectSetupData, clearWizardDraft, customers } =
+		useCaaSConfigStore();
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 
 	const customerNameId = useId();
+	const existingCustomerId = useId();
 	const stageId = useId();
 	const projectNameId = useId();
 	const caasApiKeyId = useId();
@@ -36,23 +39,59 @@ function Step1() {
 
 	const [connectionStatus, setConnectionStatus] =
 		useState<ConnectionStatusType>("untouched");
+	const customerOptions = useMemo(
+		() => customers.map((customer) => customer.customerName),
+		[customers],
+	);
+	const hasCustomerOptions = customerOptions.length > 0;
+	const [customerInputMode, setCustomerInputMode] = useState<
+		"new" | "existing"
+	>(hasCustomerOptions ? "existing" : "new");
+	const [newCustomerName, setNewCustomerName] = useState("");
+	const [existingCustomerName, setExistingCustomerName] = useState(
+		customerOptions[0] ?? "",
+	);
 
-	const { register, handleSubmit, control, setValue, watch } = useForm<Inputs>({
-		resolver: zodResolver(schema),
-		defaultValues: {
-			customerName: "",
-			stage: "dev",
-			projectName: "",
-			caasApiKey: "",
-			caasUrl: "",
-		},
-		mode: "onChange",
-	});
+	const { register, handleSubmit, control, setValue, watch, setError } =
+		useForm<Inputs>({
+			resolver: zodResolver(schema),
+			defaultValues: {
+				customerName: "",
+				stage: "dev",
+				projectName: "",
+				caasApiKey: "",
+				caasUrl: "",
+			},
+			mode: "onChange",
+		});
 
 	const onSubmit: SubmitHandler<Inputs> = (data) => {
+		const normalizedCustomerName = data.customerName.trim().toLowerCase();
+		const normalizedProjectName = data.projectName.trim().toLowerCase();
+		const hasDuplicateProject = customers.some(
+			(customer) =>
+				customer.customerName.trim().toLowerCase() === normalizedCustomerName &&
+				customer.stages[data.stage].some(
+					(project) =>
+						project.projectName.trim().toLowerCase() === normalizedProjectName,
+				),
+		);
+
+		if (hasDuplicateProject) {
+			setError("projectName", {
+				type: "manual",
+				message: "duplicate",
+			});
+			toast.error(
+				t("setup.wizardSetup.step1.form.projectName.validation.duplicate"),
+			);
+			return;
+		}
+
 		testConnection().then((isConnected) => {
 			if (isConnected) {
-				setProjectSettings({
+				clearWizardDraft();
+				setWizardProjectSetupData({
 					...data,
 				});
 			}
@@ -66,6 +105,84 @@ function Step1() {
 	const { errors } = useFormState({ control });
 	const values = useWatch({ control });
 	const selectedStage = watch("stage");
+
+	useEffect(() => {
+		if (!hasCustomerOptions && customerInputMode === "existing") {
+			setCustomerInputMode("new");
+			setValue("customerName", newCustomerName, {
+				shouldValidate: true,
+				shouldDirty: true,
+			});
+			return;
+		}
+
+		if (hasCustomerOptions && !customerOptions.includes(existingCustomerName)) {
+			const fallbackCustomer = customerOptions[0];
+			setExistingCustomerName(fallbackCustomer);
+			if (customerInputMode === "existing") {
+				setValue("customerName", fallbackCustomer, {
+					shouldValidate: true,
+					shouldDirty: true,
+				});
+			}
+		}
+	}, [
+		customerInputMode,
+		customerOptions,
+		existingCustomerName,
+		hasCustomerOptions,
+		newCustomerName,
+		setValue,
+	]);
+
+	useEffect(() => {
+		if (
+			customerInputMode === "existing" &&
+			hasCustomerOptions &&
+			!values.customerName
+		) {
+			const value = existingCustomerName || customerOptions[0];
+			setExistingCustomerName(value);
+			setValue("customerName", value, {
+				shouldValidate: true,
+				shouldDirty: false,
+			});
+		}
+	}, [
+		customerInputMode,
+		customerOptions,
+		existingCustomerName,
+		hasCustomerOptions,
+		setValue,
+		values.customerName,
+	]);
+
+	const onCustomerModeChange = (mode: "new" | "existing") => {
+		if (mode === "existing" && !hasCustomerOptions) {
+			setCustomerInputMode("new");
+			setValue("customerName", newCustomerName, {
+				shouldValidate: true,
+				shouldDirty: true,
+			});
+			return;
+		}
+
+		setCustomerInputMode(mode);
+		if (mode === "existing") {
+			const value = existingCustomerName || customerOptions[0];
+			setExistingCustomerName(value);
+			setValue("customerName", value, {
+				shouldValidate: true,
+				shouldDirty: true,
+			});
+			return;
+		}
+
+		setValue("customerName", newCustomerName, {
+			shouldValidate: true,
+			shouldDirty: true,
+		});
+	};
 
 	const testConnection = async () => {
 		try {
@@ -132,22 +249,89 @@ function Step1() {
 			className="flex flex-col gap-4 p-4 w-full"
 			onSubmit={handleSubmit(onSubmit)}
 		>
-			<div>
+			<div className="min-w-0">
 				<label
-					htmlFor={customerNameId}
+					htmlFor={
+						customerInputMode === "existing"
+							? existingCustomerId
+							: customerNameId
+					}
 					className="text-sm font-medium mb-1.5 inline-block"
 				>
 					{t("setup.wizardSetup.step1.form.customerName.label")}
 				</label>
-				<Input
-					type="text"
-					id={customerNameId}
-					placeholder={t(
-						"setup.wizardSetup.step1.form.customerName.placeholder",
-					)}
-					{...register("customerName")}
-					disabled={connectionStatus === "connected"}
-				/>
+				{hasCustomerOptions && (
+					<div className="mb-2 grid grid-cols-2 gap-2">
+						<Button
+							type="button"
+							variant={customerInputMode === "new" ? "default" : "outline"}
+							onClick={() => onCustomerModeChange("new")}
+							disabled={connectionStatus === "connected"}
+							className="w-full"
+						>
+							{t("setup.wizardSetup.step1.form.customerName.mode.newCustomer")}
+						</Button>
+						<Button
+							type="button"
+							variant={customerInputMode === "existing" ? "default" : "outline"}
+							onClick={() => onCustomerModeChange("existing")}
+							disabled={connectionStatus === "connected"}
+							className="w-full"
+						>
+							{t(
+								"setup.wizardSetup.step1.form.customerName.mode.existingCustomer",
+							)}
+						</Button>
+					</div>
+				)}
+				{(!hasCustomerOptions || customerInputMode === "new") && (
+					<Input
+						type="text"
+						id={customerNameId}
+						placeholder={t(
+							"setup.wizardSetup.step1.form.customerName.placeholder",
+						)}
+						value={newCustomerName}
+						onChange={(event) => {
+							const value = event.target.value;
+							setNewCustomerName(value);
+							setValue("customerName", value, {
+								shouldValidate: true,
+								shouldDirty: true,
+							});
+						}}
+						disabled={connectionStatus === "connected"}
+					/>
+				)}
+				{customerInputMode === "existing" && hasCustomerOptions && (
+					<Select
+						value={existingCustomerName}
+						onValueChange={(value) => {
+							setExistingCustomerName(value);
+							setValue("customerName", value, {
+								shouldValidate: true,
+								shouldDirty: true,
+							});
+						}}
+						disabled={connectionStatus === "connected"}
+					>
+						<SelectTrigger id={existingCustomerId}>
+							<SelectValue
+								placeholder={t(
+									"setup.wizardSetup.step1.form.customerName.existingPlaceholder",
+								)}
+							/>
+						</SelectTrigger>
+						<SelectContent>
+							{customerOptions.map((customerName) => (
+								<SelectItem key={customerName} value={customerName}>
+									{customerName}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				)}
+				<input type="hidden" {...register("customerName")} />
 				{errors.customerName && (
 					<p className="text-red-500 text-sm mt-1">
 						{t(
@@ -156,7 +340,8 @@ function Step1() {
 					</p>
 				)}
 			</div>
-			<div>
+
+			<div className="min-w-0">
 				<label
 					htmlFor={stageId}
 					className="text-sm font-medium mb-1.5 inline-block"
@@ -174,20 +359,17 @@ function Step1() {
 						/>
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="dev">
-							{t("setup.wizardSetup.step1.form.stage.options.dev")}
-						</SelectItem>
-						<SelectItem value="qa">
-							{t("setup.wizardSetup.step1.form.stage.options.qa")}
-						</SelectItem>
-						<SelectItem value="prod">
-							{t("setup.wizardSetup.step1.form.stage.options.prod")}
-						</SelectItem>
+						{stageTypes.map((stage) => (
+							<SelectItem key={stage} value={stage}>
+								{t(`setup.wizardSetup.step1.form.stage.options.${stage}`)}
+							</SelectItem>
+						))}
 					</SelectContent>
 				</Select>
 				<input type="hidden" {...register("stage")} />
 			</div>
-			<div>
+
+			<div className="min-w-0">
 				<label
 					htmlFor={projectNameId}
 					className="text-sm font-medium mb-1.5 inline-block"
@@ -211,6 +393,7 @@ function Step1() {
 					</p>
 				)}
 			</div>
+
 			<div>
 				<label
 					htmlFor={caasApiKeyId}

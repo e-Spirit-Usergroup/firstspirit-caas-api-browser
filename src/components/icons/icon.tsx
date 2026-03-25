@@ -16,7 +16,8 @@ export type IconVariant =
 	| "caret-right"
 	| "translate"
 	| "download"
-	| "arrows-left-right";
+	| "arrows-left-right"
+	| "arrow-clockwise";
 
 const Icons: Record<
 	IconVariant,
@@ -235,6 +236,19 @@ const Icons: Record<
 		>
 			<title>Arrows left right</title>
 			<path d="M213.66,181.66l-32,32a8,8,0,0,1-11.32-11.32L188.69,184H48a8,8,0,0,1,0-16H188.69l-18.35-18.34a8,8,0,0,1,11.32-11.32l32,32A8,8,0,0,1,213.66,181.66Zm-139.32-64a8,8,0,0,0,11.32-11.32L67.31,88H208a8,8,0,0,0,0-16H67.31L85.66,53.66A8,8,0,0,0,74.34,42.34l-32,32a8,8,0,0,0,0,11.32Z"></path>
+		</svg>
+	),
+	"arrow-clockwise": (props: SVGProps<SVGSVGElement>) => (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="1rem"
+			height="1rem"
+			fill="currentColor"
+			viewBox="0 0 256 256"
+			{...props}
+		>
+			<title>Arrow Clockwise</title>
+			<path d="M240,56v48a8,8,0,0,1-8,8H184a8,8,0,0,1,0-16H211.4L184.81,71.64l-.25-.24a80,80,0,1,0-1.67,114.78,8,8,0,0,1,11,11.63A95.44,95.44,0,0,1,128,224h-1.32A96,96,0,1,1,195.75,60L224,85.8V56a8,8,0,1,1,16,0Z"></path>
 		</svg>
 	),
 };

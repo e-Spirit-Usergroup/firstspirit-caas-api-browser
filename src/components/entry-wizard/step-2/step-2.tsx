@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -21,14 +21,15 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useCaaSConfigStore } from "@/stores/caas-config-store";
+import {
+	useCaaSConfigStore,
+} from "@/stores/caas-config-store";
 import { DatabaseSchemaComponent } from "./database-schema-component";
 import { type Inputs, schema } from "./schema";
 
 function Step2() {
 	const { t } = useTranslation();
-	const { setDatabaseSchemas, projectSetupData: projectSettings } =
-		useCaaSConfigStore();
+	const { setWizardDatabaseSchemas, wizardProjectSetupData } = useCaaSConfigStore();
 	const [isResolvingSchemas, setIsResolvingSchemas] = useState<boolean>(false);
 	const [schemaNameInput, setSchemaNameInput] = useState<string>("");
 	type ConfigurationMode = "manual" | "automatic";
@@ -48,6 +49,13 @@ function Step2() {
 		navigate({ to: "/setup/wizard", search: { step: 3 } });
 	};
 
+	useEffect(() => {
+		if (!wizardProjectSetupData) {
+			toast.error("Please complete Step 1 first");
+			navigate({ to: "/setup/wizard", search: { step: 1 } });
+		}
+	}, [navigate, wizardProjectSetupData]);
+
 	const { fields, append, remove } = useFieldArray<Inputs>({
 		control,
 		name: "databaseSchemas",
@@ -55,7 +63,7 @@ function Step2() {
 
 	const onSubmit: SubmitHandler<Inputs> = (data) => {
 		console.log(data);
-		setDatabaseSchemas(data.databaseSchemas);
+		setWizardDatabaseSchemas(data.databaseSchemas);
 		setSubmitted(true);
 		toast.success(
 			t("setup.wizardSetup.step2.form.configurationMode.toast.schemasSaved"),
@@ -125,8 +133,10 @@ function Step2() {
 		additionalFilter?: { entityType: { $nin: string[] } },
 		page?: number,
 	) {
-		//@ts-expect-error - we check this before allowing to proceed to this step
-		const url = new URL(projectSettings.caasUrl);
+		if (!wizardProjectSetupData?.caasUrl || !wizardProjectSetupData.caasApiKey) {
+			throw new Error("CaaS project is not configured");
+		}
+		const url = new URL(wizardProjectSetupData.caasUrl);
 
 		const searchParams = new URLSearchParams();
 		searchParams.append("page", page ? page.toString() : "1");
@@ -143,7 +153,7 @@ function Step2() {
 
 		const response = await fetch(url.toString(), {
 			headers: {
-				Authorization: `Bearer ${projectSettings.caasApiKey}`,
+				Authorization: `Bearer ${wizardProjectSetupData.caasApiKey}`,
 			},
 		});
 		const resData = await response.json();

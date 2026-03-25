@@ -1,13 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import Icon from "@/components/icons/icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SaveConfigToJson } from "@/lib/config";
 import { useCaaSConfigStore } from "@/stores/caas-config-store";
 import { type Inputs, schema } from "./schema";
 
@@ -16,9 +15,12 @@ function Step3() {
 	const navigate = useNavigate();
 	const [setupComplete, setSetupComplete] = useState(false);
 	const {
-		setLocales,
-		databaseSchemas,
-		projectSetupData: projectSettings,
+		upsertProjectSetupData,
+		wizardProjectSetupData,
+		wizardDatabaseSchemas,
+		setActiveProjectLocales,
+		setActiveProjectDatabaseSchemas,
+		clearWizardDraft,
 	} = useCaaSConfigStore();
 	const [localeInput, setLocaleInput] = useState<string>("");
 
@@ -29,19 +31,33 @@ function Step3() {
 
 	const values = useWatch({ control });
 
+	useEffect(() => {
+		if (!wizardProjectSetupData && !setupComplete) {
+			toast.error("Please complete Step 1 first");
+			navigate({ to: "/setup/wizard", search: { step: 1 } });
+		}
+	}, [navigate, setupComplete, wizardProjectSetupData]);
+
 	const onSubmit: SubmitHandler<Inputs> = (data) => {
 		if (data.locales.length === 0) {
 			toast.error("Locales can't be empty");
 			return;
 		}
-		setLocales(data.locales);
+		if (!wizardProjectSetupData) {
+			toast.error("Please complete Step 1 first");
+			navigate({ to: "/setup/wizard", search: { step: 1 } });
+			return;
+		}
+		upsertProjectSetupData(wizardProjectSetupData);
+		setActiveProjectDatabaseSchemas(wizardDatabaseSchemas);
+		setActiveProjectLocales(data.locales);
 		toast.success(t("setup.wizardSetup.step3.form.locale.toast.localesSaved"));
-		SaveConfigToJson({
-			projectSettings,
-			databaseSchemas,
-			locales: data.locales,
-		});
 		setSetupComplete(true);
+	};
+
+	const finishSetup = () => {
+		clearWizardDraft();
+		navigate({ to: "/app" });
 	};
 
 	const addNewLocale = (locale: string) => {
@@ -139,7 +155,7 @@ function Step3() {
 				)}
 			</form>
 			{setupComplete && (
-				<Button onClick={() => navigate({ to: "/app" })}>
+				<Button onClick={finishSetup}>
 					<Icon icon="running-man" className="size-4" />
 					{t("setup.wizardSetup.step3.form.nextStep")}
 				</Button>
