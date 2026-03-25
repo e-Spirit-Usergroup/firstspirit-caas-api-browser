@@ -55,6 +55,12 @@
 					},
 					"submitBtn": "Submit",
 					"nextStep": "Next Step",
+					"discovery": {
+						"inProgress": "Discovering schemas and locales...",
+						"success": "Updated metadata: {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales",
+						"noLocales": "No locales were discovered. Setup cannot continue without locales.",
+						"error": "Could not discover schemas and locales. Please check your CaaS access."
+					},
 					"connectionStatus": {
 						"label": "Connection Status",
 						"connected": "Connected",
@@ -70,50 +76,6 @@
 							"statusError": "Error | Probably wrong URL"
 						}
 					}
-				}
-			},
-			"step2": {
-				"form": {
-					"title": "Schemas & Entity Types",
-					"submitBtn": "Save",
-					"nextStep": "Next Step",
-					"configurationMode": {
-						"automaticBtn": "Automatically discover schemas and entity types",
-						"label": "Configuration Mode",
-						"tooltip": "Configuration can be done automatically or manually. Automatic mode will send requests to the CaaS and retrieve entityTypes. With every successful request all discovered entity types will be excluede from the next request until no data is returned from the CaaS.",
-						"options": {
-							"manual": "Manual",
-							"automatic": "Automatic"
-						},
-						"resolvingSchemas": "Resolving schemas...",
-						"manual": {
-							"addNewSchema": "Add new schema",
-							"addSchemaBtn": "Add schema",
-							"schemaNamePlaceholder": "Schema name",
-							"addEntityTypeBtn": "Add"
-						},
-						"toast": {
-							"schemasFound": "Found {{schemas}} schemas with a total of {{entityTypes}} entity types",
-							"schemasSaved": "Schemas saved",
-							"error": "Error resolving schemas: {{error}}"
-						}
-					}
-				}
-			},
-			"step3": {
-				"form": {
-					"title": "Add locale",
-					"locale": {
-						"placeholder": "Locale (e.g. en_US)",
-						"add": "Add",
-						"invalidFormat": "Invalid locale format. Expected format: xx_YY",
-						"toast": {
-							"localesSaved": "Locales saved",
-							"alreadyExists": "Locale already exists"
-						}
-					},
-					"submitBtn": "Save",
-					"nextStep": "Start browsing"
 				}
 			}
 		},
@@ -220,7 +182,11 @@
 				"title": "Manage Projects",
 				"subtitle": "Review and maintain configured projects.",
 				"actions": "Actions",
-				"updateProject": "Update project",
+				"updateProject": "Update schemas and locales",
+				"updatingProject": "Updating schemas and locales...",
+				"updateSuccess": "Updated '{{projectName}}': {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales",
+				"updateFailed": "Failed to update schemas and locales for this project.",
+				"noLocalesDiscovered": "No locales were discovered for this project.",
 				"removeProject": "Remove project",
 				"deleteSelected": "Delete selected",
 				"exportSelected": "Export selected",

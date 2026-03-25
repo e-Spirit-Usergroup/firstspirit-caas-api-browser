@@ -3,6 +3,7 @@ import { MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { discoverSchemasAndLocales } from "@/lib/caas-discovery";
 import { SaveSelectedProjectsToJson } from "@/lib/config";
 import { useCaaSConfigStore } from "@/stores/caas-config-store";
 import type { ProjectConfig } from "@/types/configuration";
@@ -56,7 +57,8 @@ function ManageProjectsDialog({
 	onAddNewProjectClick,
 }: ManageProjectsDialogProps) {
 	const { t } = useTranslation();
-	const { customers, removeProject } = useCaaSConfigStore();
+	const { customers, removeProject, setProjectSchemasAndLocales } =
+		useCaaSConfigStore();
 	const [selectedProjectKeys, setSelectedProjectKeys] = useState<Set<string>>(
 		new Set(),
 	);
@@ -66,6 +68,7 @@ function ManageProjectsDialog({
 	const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 	const [exportPassword, setExportPassword] = useState("");
 	const [isExporting, setIsExporting] = useState(false);
+	const [updatingProjectKey, setUpdatingProjectKey] = useState<string | null>(null);
 
 	const projects = useMemo(
 		() =>
@@ -170,6 +173,43 @@ function ManageProjectsDialog({
 		});
 		setSelectedProjectKeys(new Set());
 		setIsBulkDeleteAlertOpen(false);
+	};
+
+	const updateProjectMetadata = async (project: ProjectRow) => {
+		const key = `${project.customerName}::${project.stage}::${project.projectName}`;
+		setUpdatingProjectKey(key);
+		try {
+			const { databaseSchemas, locales } = await discoverSchemasAndLocales({
+				caasUrl: project.project.caasUrl,
+				caasApiKey: project.project.caasApiKey,
+			});
+			if (!locales.length) {
+				toast.error(t("app.settings.manageProjects.noLocalesDiscovered"));
+				return;
+			}
+			setProjectSchemasAndLocales({
+				customerName: project.customerName,
+				stage: project.stage,
+				projectName: project.projectName,
+				databaseSchemas,
+				locales,
+			});
+			toast.success(
+				t("app.settings.manageProjects.updateSuccess", {
+					projectName: project.projectName,
+					schemas: databaseSchemas.length,
+					entityTypes: databaseSchemas.reduce(
+						(acc, schema) => acc + (schema.entityTypeNames?.length ?? 0),
+						0,
+					),
+					locales: locales.length,
+				}),
+			);
+		} catch {
+			toast.error(t("app.settings.manageProjects.updateFailed"));
+		} finally {
+			setUpdatingProjectKey(null);
+		}
 	};
 
 	const exportSelectedProjects = async () => {
@@ -307,8 +347,17 @@ function ManageProjectsDialog({
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end">
-													<DropdownMenuItem disabled>
-														{t("app.settings.manageProjects.updateProject")}
+													<DropdownMenuItem
+														onClick={() => void updateProjectMetadata(project)}
+														disabled={
+															updatingProjectKey ===
+															`${project.customerName}::${project.stage}::${project.projectName}`
+														}
+													>
+														{updatingProjectKey ===
+														`${project.customerName}::${project.stage}::${project.projectName}`
+															? t("app.settings.manageProjects.updatingProject")
+															: t("app.settings.manageProjects.updateProject")}
 													</DropdownMenuItem>
 													<DropdownMenuItem
 														className="text-destructive focus:text-destructive"

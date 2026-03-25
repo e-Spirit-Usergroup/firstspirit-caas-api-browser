@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import ConnectionStatusIcon from "@/components/ui/connection-status-icon";
 import { Input } from "@/components/ui/input";
+import { discoverSchemasAndLocales } from "@/lib/caas-discovery";
 import {
 	Select,
 	SelectContent,
@@ -25,7 +26,7 @@ import { stageTypes } from "@/types/stage";
 import { type Inputs, schema } from "./schema";
 
 function Step1() {
-	const { setWizardProjectSetupData, clearWizardDraft, customers } =
+	const { upsertProjectSetupData, setProjectSchemasAndLocales, customers } =
 		useCaaSConfigStore();
 	const { t } = useTranslation();
 	const navigate = useNavigate();
@@ -39,6 +40,7 @@ function Step1() {
 
 	const [connectionStatus, setConnectionStatus] =
 		useState<ConnectionStatusType>("untouched");
+	const [isDiscoveringMetadata, setIsDiscoveringMetadata] = useState(false);
 	const customerOptions = useMemo(
 		() => customers.map((customer) => customer.customerName),
 		[customers],
@@ -65,7 +67,7 @@ function Step1() {
 			mode: "onChange",
 		});
 
-	const onSubmit: SubmitHandler<Inputs> = (data) => {
+	const onSubmit: SubmitHandler<Inputs> = async (data) => {
 		const normalizedCustomerName = data.customerName.trim().toLowerCase();
 		const normalizedProjectName = data.projectName.trim().toLowerCase();
 		const hasDuplicateProject = customers.some(
@@ -88,23 +90,55 @@ function Step1() {
 			return;
 		}
 
-		testConnection().then((isConnected) => {
-			if (isConnected) {
-				clearWizardDraft();
-				setWizardProjectSetupData({
-					...data,
-				});
-			}
-		});
-	};
+		const isConnected = await testConnection(data.caasUrl, data.caasApiKey);
+		if (!isConnected) {
+			return;
+		}
 
-	const nextStep = () => {
-		navigate({ to: "/setup/wizard", search: { step: 2 } });
+		try {
+			setIsDiscoveringMetadata(true);
+			const { databaseSchemas, locales } = await discoverSchemasAndLocales({
+				caasUrl: data.caasUrl,
+				caasApiKey: data.caasApiKey,
+			});
+
+			if (!locales.length) {
+				toast.error(t("setup.wizardSetup.step1.form.discovery.noLocales"));
+				setConnectionStatus("disconnected");
+				return;
+			}
+
+			upsertProjectSetupData(data);
+			setProjectSchemasAndLocales({
+				customerName: data.customerName.trim(),
+				stage: data.stage,
+				projectName: data.projectName.trim(),
+				databaseSchemas,
+				locales,
+			});
+			toast.success(
+				t("setup.wizardSetup.step1.form.discovery.success", {
+					schemas: databaseSchemas.length,
+					entityTypes: databaseSchemas.reduce(
+						(acc, schema) => acc + (schema.entityTypeNames?.length ?? 0),
+						0,
+					),
+					locales: locales.length,
+				}),
+			);
+			navigate({ to: "/app" });
+		} catch {
+			toast.error(t("setup.wizardSetup.step1.form.discovery.error"));
+			setConnectionStatus("disconnected");
+		} finally {
+			setIsDiscoveringMetadata(false);
+		}
 	};
 
 	const { errors } = useFormState({ control });
 	const values = useWatch({ control });
 	const selectedStage = watch("stage");
+	const isFormLocked = connectionStatus === "connected" || isDiscoveringMetadata;
 
 	useEffect(() => {
 		if (!hasCustomerOptions && customerInputMode === "existing") {
@@ -184,14 +218,15 @@ function Step1() {
 		});
 	};
 
-	const testConnection = async () => {
+	const testConnection = async (caasUrl: string, caasApiKey: string) => {
 		try {
-			if (!values.caasUrl) {
+			setConnectionStatus("testing");
+			if (!caasUrl) {
 				setConnectionStatus("disconnected");
 				toast.error("CaaS URL is required");
 				return false;
 			}
-			const url: URL = new URL(values.caasUrl);
+			const url: URL = new URL(caasUrl);
 			const searchParams = new URLSearchParams();
 
 			searchParams.append("filter", `{"_id": ""}`);
@@ -202,7 +237,7 @@ function Step1() {
 
 			const response = await fetch(url.toString(), {
 				headers: {
-					Authorization: `Bearer ${values.caasApiKey}`,
+					Authorization: `Bearer ${caasApiKey}`,
 					"Content-Type": "application/json",
 				},
 			});
@@ -266,7 +301,7 @@ function Step1() {
 							type="button"
 							variant={customerInputMode === "new" ? "default" : "outline"}
 							onClick={() => onCustomerModeChange("new")}
-							disabled={connectionStatus === "connected"}
+							disabled={isFormLocked}
 							className="w-full"
 						>
 							{t("setup.wizardSetup.step1.form.customerName.mode.newCustomer")}
@@ -275,7 +310,7 @@ function Step1() {
 							type="button"
 							variant={customerInputMode === "existing" ? "default" : "outline"}
 							onClick={() => onCustomerModeChange("existing")}
-							disabled={connectionStatus === "connected"}
+							disabled={isFormLocked}
 							className="w-full"
 						>
 							{t(
@@ -300,7 +335,7 @@ function Step1() {
 								shouldDirty: true,
 							});
 						}}
-						disabled={connectionStatus === "connected"}
+						disabled={isFormLocked}
 					/>
 				)}
 				{customerInputMode === "existing" && hasCustomerOptions && (
@@ -313,7 +348,7 @@ function Step1() {
 								shouldDirty: true,
 							});
 						}}
-						disabled={connectionStatus === "connected"}
+						disabled={isFormLocked}
 					>
 						<SelectTrigger id={existingCustomerId}>
 							<SelectValue
@@ -351,7 +386,7 @@ function Step1() {
 				<Select
 					value={selectedStage}
 					onValueChange={(value: Inputs["stage"]) => setValue("stage", value)}
-					disabled={connectionStatus === "connected"}
+					disabled={isFormLocked}
 				>
 					<SelectTrigger id={stageId}>
 						<SelectValue
@@ -383,7 +418,7 @@ function Step1() {
 						"setup.wizardSetup.step1.form.projectName.placeholder",
 					)}
 					{...register("projectName")}
-					disabled={connectionStatus === "connected"}
+					disabled={isFormLocked}
 				/>
 				{errors.projectName && (
 					<p className="text-red-500 text-sm mt-1">
@@ -406,7 +441,7 @@ function Step1() {
 					id={caasApiKeyId}
 					placeholder={t("setup.wizardSetup.step1.form.caasApiKey.placeholder")}
 					{...register("caasApiKey")}
-					disabled={connectionStatus === "connected"}
+					disabled={isFormLocked}
 				/>
 				{errors.caasApiKey && (
 					<p className="text-red-500 text-sm mt-1">
@@ -429,7 +464,7 @@ function Step1() {
 					id={caasUrlId}
 					placeholder={t("setup.wizardSetup.step1.form.caasUrl.placeholder")}
 					{...register("caasUrl")}
-					disabled={connectionStatus === "connected"}
+					disabled={isFormLocked}
 				/>
 				{errors.caasUrl && (
 					<p className="text-red-500 text-sm mt-1">
@@ -441,8 +476,10 @@ function Step1() {
 			</div>
 
 			{connectionStatus !== "connected" && (
-				<Button type="submit">
-					{t("setup.wizardSetup.step1.form.submitBtn")}
+				<Button type="submit" disabled={isDiscoveringMetadata}>
+					{isDiscoveringMetadata
+						? t("setup.wizardSetup.step1.form.discovery.inProgress")
+						: t("setup.wizardSetup.step1.form.submitBtn")}
 				</Button>
 			)}
 			<span className="inline-flex items-center gap-2 font-semibold text-sm">
@@ -450,11 +487,6 @@ function Step1() {
 				{`${t("setup.wizardSetup.step1.form.connectionStatus.label")}: `}
 				{t(`setup.wizardSetup.step1.form.connectionStatus.${connectionStatus}`)}
 			</span>
-			{connectionStatus === "connected" && (
-				<Button onClick={nextStep.bind(null)}>
-					{t("setup.wizardSetup.step1.form.nextStep")}
-				</Button>
-			)}
 		</form>
 	);
 }

@@ -55,6 +55,12 @@
 					},
 					"submitBtn": "Salva",
 					"nextStep": "Avanti",
+					"discovery": {
+						"inProgress": "Rilevamento di schemi e locale in corso...",
+						"success": "Metadati aggiornati: {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali",
+						"noLocales": "Nessuna locale rilevata. La configurazione non puo continuare senza locali.",
+						"error": "Impossibile rilevare schemi e locali. Controlla l'accesso a CaaS."
+					},
 					"connectionStatus": {
 						"label": "Stato connessione",
 						"connected": "Connesso",
@@ -70,50 +76,6 @@
 							"statusError": "Errore | Probabilmente URL errato"
 						}
 					}
-				}
-			},
-			"step2": {
-				"form": {
-					"title": "Schemi e tipi di entità",
-					"submitBtn": "Salva",
-					"nextStep": "Avanti",
-					"configurationMode": {
-						"automaticBtn": "Rileva automaticamente schemi e tipi di entità",
-						"label": "Modalità di configurazione",
-						"tooltip": "La configurazione può essere eseguita automaticamente o manualmente. In modalità automatica verranno inviate richieste al CaaS per recuperare gli entityTypes. A ogni richiesta andata a buon fine tutti i tipi di entità individuati verranno esclusi dalla richiesta successiva finché il CaaS non restituirà più dati.",
-						"options": {
-							"manual": "Manuale",
-							"automatic": "Automatico"
-						},
-						"resolvingSchemas": "Rilevamento degli schemi in corso...",
-						"manual": {
-							"addNewSchema": "Aggiungi nuovo schema",
-							"addSchemaBtn": "Aggiungi schema",
-							"schemaNamePlaceholder": "Nome schema",
-							"addEntityTypeBtn": "Aggiungi"
-						},
-						"toast": {
-							"schemasFound": "Trovati {{schemas}} schemi per un totale di {{entityTypes}} tipi di entità",
-							"schemasSaved": "Schemi salvati",
-							"error": "Errore durante il rilevamento degli schemi: {{error}}"
-						}
-					}
-				}
-			},
-			"step3": {
-				"form": {
-					"title": "Aggiungi locale",
-					"locale": {
-						"placeholder": "Locale (es. it_IT)",
-						"add": "Aggiungi",
-						"invalidFormat": "Formato locale non valido. Formato previsto: xx_YY",
-						"toast": {
-							"localesSaved": "Locali salvati",
-							"alreadyExists": "Locale già esistente"
-						}
-					},
-					"submitBtn": "Salva",
-					"nextStep": "Inizia a esplorare"
 				}
 			}
 		},
@@ -220,7 +182,11 @@
 				"title": "Gestisci progetti",
 				"subtitle": "Controlla e gestisci i progetti configurati.",
 				"actions": "Azioni",
-				"updateProject": "Aggiorna progetto",
+				"updateProject": "Aggiorna schemi e locali",
+				"updatingProject": "Aggiornamento schemi e locali in corso...",
+				"updateSuccess": "'{{projectName}}' aggiornato: {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali",
+				"updateFailed": "Impossibile aggiornare schemi e locali per questo progetto.",
+				"noLocalesDiscovered": "Nessuna locale rilevata per questo progetto.",
 				"removeProject": "Rimuovi progetto",
 				"deleteSelected": "Rimuovi selezionati",
 				"exportSelected": "Esporta selezionati",

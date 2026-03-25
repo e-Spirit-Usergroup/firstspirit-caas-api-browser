@@ -55,6 +55,12 @@
 					},
 					"submitBtn": "Speichern",
 					"nextStep": "Weiter",
+					"discovery": {
+						"inProgress": "Schemas und Locales werden erkannt...",
+						"success": "Metadaten aktualisiert: {{schemas}} Schemas, {{entityTypes}} Entity Types, {{locales}} Locales",
+						"noLocales": "Es wurden keine Locales gefunden. Ohne Locales kann das Setup nicht fortgesetzt werden.",
+						"error": "Schemas und Locales konnten nicht erkannt werden. Bitte CaaS-Zugriff prüfen."
+					},
 					"connectionStatus": {
 						"label": "Verbindungsstatus",
 						"connected": "Verbunden",
@@ -70,50 +76,6 @@
 							"statusError": "Fehler | Möglicherweise falsche URL"
 						}
 					}
-				}
-			},
-			"step2": {
-				"form": {
-					"title": "Schemas & Entity Types",
-					"submitBtn": "Speichern",
-					"nextStep": "Weiter",
-					"configurationMode": {
-						"automaticBtn": "Schemas & Entity Types automatisch erkennen",
-						"label": "Konfigurationsmodus",
-						"tooltip": "Die Konfiguration kann automatisch oder manuell erfolgen. Im automatischen Modus werden Anfragen an den CaaS gesendet und EntityTypes abgerufen. Mit jeder erfolgreichen Anfrage werden alle entdeckten Entity Types von der nächsten Anfrage ausgeschlossen, bis keine Daten mehr von der CaaS zurückgegeben werden.",
-						"options": {
-							"manual": "Manuell",
-							"automatic": "Automatisch"
-						},
-						"resolvingSchemas": "Schemas werden erkannt...",
-						"manual": {
-							"addNewSchema": "Neues Schema hinzufügen",
-							"addSchemaBtn": "Schema hinzufügen",
-							"schemaNamePlaceholder": "Schema Name",
-							"addEntityTypeBtn": "Hinzufügen"
-						},
-						"toast": {
-							"schemasFound": "{{schemas}} Schemas gefunden mit insgesamt {{entityTypes}} Entity Types",
-							"schemasSaved": "Schemas gespeichert",
-							"error": "Fehler beim Erkennen der Schemas: {{error}}"
-						}
-					}
-				}
-			},
-			"step3": {
-				"form": {
-					"title": "Locale hinzufügen",
-					"locale": {
-						"placeholder": "Locale (z. B. de_DE)",
-						"add": "Hinzufügen",
-						"invalidFormat": "Ungültiges Locale Format. Erwartetes Format: xx_YY",
-						"toast": {
-							"localesSaved": "Locales gespeichert",
-							"alreadyExists": "Locale bereits vorhanden"
-						}
-					},
-					"submitBtn": "Speichern",
-					"nextStep": "Loslegen"
 				}
 			}
 		},
@@ -220,7 +182,11 @@
 				"title": "Projekte verwalten",
 				"subtitle": "Konfigurierte Projekte anzeigen und pflegen.",
 				"actions": "Aktionen",
-				"updateProject": "update",
+				"updateProject": "Schemas und Locales aktualisieren",
+				"updatingProject": "Schemas und Locales werden aktualisiert...",
+				"updateSuccess": "'{{projectName}}' aktualisiert: {{schemas}} Schemas, {{entityTypes}} Entity Types, {{locales}} Locales",
+				"updateFailed": "Schemas und Locales für dieses Projekt konnten nicht aktualisiert werden.",
+				"noLocalesDiscovered": "Für dieses Projekt wurden keine Locales gefunden.",
 				"removeProject": "entfernen",
 				"deleteSelected": "auswahl entfernen",
 				"exportSelected": "auswahl exportieren",

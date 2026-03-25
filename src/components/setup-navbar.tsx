@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/tw-utils";
 import { version } from "../../package.json";
 import LanguageSwitch from "./ui/language-switch";
@@ -15,7 +16,10 @@ function SetupNavbar({ className, ...props }: Props) {
 			{...props}
 		>
 			<div className="flex gap-4">
-				<h1 className="text-xl font-bold">{`FirstSpirit CaaS API Browser ${version}`}</h1>
+				<Link
+					to="/"
+					className="text-xl font-bold"
+				>{`FirstSpirit CaaS API Browser ${version}`}</Link>
 			</div>
 			<div className="sm:ml-auto flex gap-0 items-center justify-between">
 				<LanguageSwitch />

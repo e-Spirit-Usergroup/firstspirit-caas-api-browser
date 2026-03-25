@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/tw-utils";
 import { version } from "../../package.json";
 import Settings from "./settings";
@@ -10,7 +11,10 @@ export function Navbar({ className, ...props }: Props) {
 	return (
 		<header className={cn("flex flex-col", className)} {...props}>
 			<div className="flex gap-4 items-center justify-between mb-4">
-				<h1 className="text-xl font-bold">{`FirstSpirit CaaS API Browser ${version}`}</h1>
+				<Link
+					to="/"
+					className="text-xl font-bold"
+				>{`FirstSpirit CaaS API Browser ${version}`}</Link>
 				<div className="flex gap-0 items-center ml-auto">
 					<LanguageSwitch />
 					<ThemeSwitch />

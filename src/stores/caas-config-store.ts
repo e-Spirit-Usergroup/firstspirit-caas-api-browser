@@ -132,19 +132,21 @@ const normalizeCustomers = (customers: CustomerConfig[]): CustomerConfig[] =>
 export type CaaSConfigStore = {
 	customers: CustomerConfig[];
 	activeSelection: ActiveProjectSelection | null;
-	wizardProjectSetupData: ProjectSetupData | null;
-	wizardDatabaseSchemas: DatabaseSchema[];
 	setConfigData: (
 		customers: CustomerConfig[],
 		activeSelection?: ActiveProjectSelection | null,
 	) => void;
 	upsertProjectSetupData: (projectSetupData: ProjectSetupData) => void;
-	setWizardProjectSetupData: (projectSetupData: ProjectSetupData) => void;
-	setWizardDatabaseSchemas: (schemas: DatabaseSchema[]) => void;
-	clearWizardDraft: () => void;
 	setActiveCustomer: (customerName: string) => void;
 	setActiveStage: (stage: StageType) => void;
 	setActiveProject: (projectName: string) => void;
+	setProjectSchemasAndLocales: (project: {
+		customerName: string;
+		stage: StageType;
+		projectName: string;
+		databaseSchemas: DatabaseSchema[];
+		locales: string[];
+	}) => void;
 	setActiveProjectDatabaseSchemas: (schemas: DatabaseSchema[]) => void;
 	setActiveProjectLocales: (locales: string[]) => void;
 	removeProject: (project: {
@@ -160,13 +162,14 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 		(set) => ({
 			customers: [],
 			activeSelection: null,
-			wizardProjectSetupData: null,
-			wizardDatabaseSchemas: [],
 			setConfigData: (customers, activeSelection = null) => {
 				const normalizedCustomers = normalizeCustomers(customers);
 				set({
 					customers: normalizedCustomers,
-					activeSelection: ensureSelection(normalizedCustomers, activeSelection),
+					activeSelection: ensureSelection(
+						normalizedCustomers,
+						activeSelection,
+					),
 				});
 			},
 			upsertProjectSetupData: (projectSetupData) =>
@@ -219,24 +222,6 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 						}),
 					};
 				}),
-			setWizardProjectSetupData: (projectSetupData) =>
-				set({
-					wizardProjectSetupData: {
-						...projectSetupData,
-						customerName: projectSetupData.customerName.trim(),
-						projectName: projectSetupData.projectName.trim(),
-						caasUrl: normalizeCaasUrlForStorage(projectSetupData.caasUrl),
-					},
-				}),
-			setWizardDatabaseSchemas: (wizardDatabaseSchemas) =>
-				set({
-					wizardDatabaseSchemas,
-				}),
-			clearWizardDraft: () =>
-				set({
-					wizardProjectSetupData: null,
-					wizardDatabaseSchemas: [],
-				}),
 			setActiveCustomer: (customerName) =>
 				set((state) => {
 					const nextSelection = firstSelectionForCustomer(
@@ -284,18 +269,46 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 						activeSelection: nextSelection,
 					};
 				}),
+			setProjectSchemasAndLocales: ({
+				customerName,
+				stage,
+				projectName,
+				databaseSchemas,
+				locales,
+			}) =>
+				set((state) => {
+					const customers = state.customers.map((customer) => {
+						if (customer.customerName !== customerName) {
+							return customer;
+						}
+						const stageProjects = customer.stages[stage].map((project) =>
+							project.projectName === projectName
+								? { ...project, databaseSchemas, locales }
+								: project,
+						);
+						return {
+							...customer,
+							stages: {
+								...customer.stages,
+								[stage]: stageProjects,
+							},
+						};
+					});
+					return { ...state, customers };
+				}),
 			setActiveProjectDatabaseSchemas: (databaseSchemas) =>
 				set((state) => {
 					if (!state.activeSelection) {
 						return state;
 					}
+					const selection = state.activeSelection;
 					const customers = state.customers.map((customer) => {
-						if (customer.customerName !== state.activeSelection?.customerName) {
+						if (customer.customerName !== selection.customerName) {
 							return customer;
 						}
-						const stage = state.activeSelection.stage;
+						const stage = selection.stage;
 						const stageProjects = customer.stages[stage].map((project) =>
-							project.projectName === state.activeSelection?.projectName
+							project.projectName === selection.projectName
 								? { ...project, databaseSchemas }
 								: project,
 						);
@@ -314,13 +327,14 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 					if (!state.activeSelection) {
 						return state;
 					}
+					const selection = state.activeSelection;
 					const customers = state.customers.map((customer) => {
-						if (customer.customerName !== state.activeSelection?.customerName) {
+						if (customer.customerName !== selection.customerName) {
 							return customer;
 						}
-						const stage = state.activeSelection.stage;
+						const stage = selection.stage;
 						const stageProjects = customer.stages[stage].map((project) =>
-							project.projectName === state.activeSelection?.projectName
+							project.projectName === selection.projectName
 								? { ...project, locales }
 								: project,
 						);
@@ -373,8 +387,6 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 				set({
 					customers: [],
 					activeSelection: null,
-					wizardProjectSetupData: null,
-					wizardDatabaseSchemas: [],
 				}),
 		}),
 		{
