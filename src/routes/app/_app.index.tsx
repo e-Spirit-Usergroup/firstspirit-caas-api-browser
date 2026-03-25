@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Navbar } from "@/components/app-navbar";
-import { Footer } from "@/components/footer";
 import Icon from "@/components/icons/icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

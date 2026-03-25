@@ -157,7 +157,10 @@ function Step1() {
 				)}
 			</div>
 			<div>
-				<label htmlFor={stageId} className="text-sm font-medium mb-1.5 inline-block">
+				<label
+					htmlFor={stageId}
+					className="text-sm font-medium mb-1.5 inline-block"
+				>
 					{t("setup.wizardSetup.step1.form.stage.label")}
 				</label>
 				<Select
@@ -166,7 +169,9 @@ function Step1() {
 					disabled={connectionStatus === "connected"}
 				>
 					<SelectTrigger id={stageId}>
-						<SelectValue placeholder={t("setup.wizardSetup.step1.form.stage.label")} />
+						<SelectValue
+							placeholder={t("setup.wizardSetup.step1.form.stage.label")}
+						/>
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value="dev">
