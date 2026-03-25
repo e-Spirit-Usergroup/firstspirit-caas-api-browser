@@ -84,7 +84,10 @@ function InputFile() {
                     config.databaseSchemas &&
                     (!Array.isArray(config.databaseSchemas) ||
                         !config.databaseSchemas.every(
-                            (schema: any) =>
+                            (schema: {
+                                name?: unknown;
+                                entityTypeNames?: unknown;
+                            }) =>
                                 typeof schema.name === 'string' &&
                                 (schema.entityTypeNames === null ||
                                     Array.isArray(schema.entityTypeNames))
@@ -105,11 +108,27 @@ function InputFile() {
                 }
 
                 const ps = config.projectSettings;
+                const customerName =
+                    typeof ps === 'object' && ps !== null && 'customerName' in ps
+                        ? ps.customerName
+                        : null;
+                const stage =
+                    typeof ps === 'object' && ps !== null && 'stage' in ps
+                        ? ps.stage
+                        : 'prod';
+                const projectName =
+                    typeof ps === 'object' && ps !== null && 'projectName' in ps
+                        ? ps.projectName
+                        : null;
                 if (
                     typeof ps !== 'object' ||
                     ps === null ||
-                    (ps.projectName !== null &&
-                        typeof ps.projectName !== 'string') ||
+                    (customerName !== null && typeof customerName !== 'string') ||
+                    (stage !== null &&
+                        stage !== 'dev' &&
+                        stage !== 'qa' &&
+                        stage !== 'prod') ||
+                    (projectName !== null && typeof projectName !== 'string') ||
                     (ps.caasApiKey !== null &&
                         typeof ps.caasApiKey !== 'string') ||
                     (ps.caasUrl !== null && typeof ps.caasUrl !== 'string')
@@ -121,14 +140,20 @@ function InputFile() {
                 // Save to store
                 setDatabaseSchemas(config.databaseSchemas);
                 setLocales(config.locales);
-                setProjectSettings(config.projectSettings);
+                setProjectSettings({
+                    customerName,
+                    stage,
+                    projectName,
+                    caasApiKey: ps.caasApiKey,
+                    caasUrl: ps.caasUrl,
+                });
 
                 toast.success(
                     t('setup.fileUpload.toast.configLoadedSuccessfully')
                 );
                 setUploadSuccessful(true);
                 navigate({ to: '/app' });
-            } catch (error) {
+            } catch {
                 toast.error('Invalid JSON file. Please check the file format.');
             }
         };

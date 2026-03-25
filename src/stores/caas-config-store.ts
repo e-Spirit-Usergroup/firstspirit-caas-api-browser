@@ -16,6 +16,8 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 	persist(
 		(set) => ({
 			projectSetupData: {
+				customerName: null,
+				stage: null,
 				projectName: null,
 				caasApiKey: null,
 				caasUrl: null,
@@ -29,6 +31,8 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 			clearStore: () =>
 				set({
 					projectSetupData: {
+						customerName: null,
+						stage: null,
 						projectName: null,
 						caasApiKey: null,
 						caasUrl: null,
@@ -49,6 +53,8 @@ export const isCaaSConfigStoreInitialized = (): boolean => {
 	const { projectSetupData, locales } = store;
 
 	return !!(
+		projectSetupData.customerName &&
+		projectSetupData.stage &&
 		projectSetupData.projectName &&
 		projectSetupData.caasApiKey &&
 		projectSetupData.caasUrl &&

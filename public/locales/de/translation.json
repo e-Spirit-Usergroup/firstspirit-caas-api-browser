@@ -10,6 +10,21 @@
 			"description": "Schritt-für-Schritt in einem geführten Formular",
 			"step1": {
 				"form": {
+					"customerName": {
+						"label": "Kundenname",
+						"placeholder": "Kundenname",
+						"validation": {
+							"required": "Dieses Feld ist erforderlich"
+						}
+					},
+					"stage": {
+						"label": "Stufe",
+						"options": {
+							"dev": "dev",
+							"qa": "qa",
+							"prod": "prod"
+						}
+					},
 					"projectName": {
 						"label": "Projektname",
 						"placeholder": "Projektname",

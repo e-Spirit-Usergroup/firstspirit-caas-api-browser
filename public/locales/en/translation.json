@@ -10,6 +10,21 @@
 			"description": "Step-by-step in a guided form",
 			"step1": {
 				"form": {
+					"customerName": {
+						"label": "Customer Name",
+						"placeholder": "Customer Name",
+						"validation": {
+							"required": "This field is required"
+						}
+					},
+					"stage": {
+						"label": "Stage",
+						"options": {
+							"dev": "dev",
+							"qa": "qa",
+							"prod": "prod"
+						}
+					},
 					"projectName": {
 						"label": "Project Name",
 						"placeholder": "Project Name",

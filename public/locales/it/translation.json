@@ -10,6 +10,21 @@
 			"description": "Procedura guidata passo dopo passo",
 			"step1": {
 				"form": {
+					"customerName": {
+						"label": "Nome cliente",
+						"placeholder": "Nome cliente",
+						"validation": {
+							"required": "Questo campo è obbligatorio"
+						}
+					},
+					"stage": {
+						"label": "Stage",
+						"options": {
+							"dev": "dev",
+							"qa": "qa",
+							"prod": "prod"
+						}
+					},
 					"projectName": {
 						"label": "Nome progetto",
 						"placeholder": "Nome progetto",

@@ -1,6 +1,6 @@
 {
 	"name": "firstspirit-caas-api-browser",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"type": "module",
 	"author": "Kevin Rieger <k.rieger@reply.de> (https://neoreply.de/), Felix Kratz <f.kratz@reply.de> (https://neoreply.de/)",
 	"scripts": {

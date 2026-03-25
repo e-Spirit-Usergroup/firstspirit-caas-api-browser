@@ -18,6 +18,13 @@ type Props = React.HTMLAttributes<HTMLDivElement>;
 export function Navbar({ className, ...props }: Props) {
 	const { projectSetupData } = useCaaSConfigStore();
 	const { t } = useTranslation();
+	const customerName = projectSetupData?.customerName?.trim().toUpperCase();
+	const stage = projectSetupData?.stage?.toUpperCase();
+	const projectName = projectSetupData?.projectName?.trim();
+	const displayProjectName =
+		customerName && stage && projectName
+			? `${customerName} ${stage}: ${projectName}`
+			: projectName || "";
 
 	return (
 		<header className={cn("flex flex-col", className)} {...props}>
@@ -38,7 +45,7 @@ export function Navbar({ className, ...props }: Props) {
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value={projectSetupData?.caasUrl || ""}>
-							{projectSetupData?.projectName}
+							{displayProjectName}
 						</SelectItem>
 					</SelectContent>
 				</Select>

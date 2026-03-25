@@ -12,6 +12,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import ConnectionStatusIcon from "@/components/ui/connection-status-icon";
 import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { useCaaSConfigStore } from "@/stores/caas-config-store";
 import type { ConnectionStatusType } from "@/types/connection-status";
 import { type Inputs, schema } from "./schema";
@@ -21,6 +28,8 @@ function Step1() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 
+	const customerNameId = useId();
+	const stageId = useId();
 	const projectNameId = useId();
 	const caasApiKeyId = useId();
 	const caasUrlId = useId();
@@ -28,9 +37,11 @@ function Step1() {
 	const [connectionStatus, setConnectionStatus] =
 		useState<ConnectionStatusType>("untouched");
 
-	const { register, handleSubmit, control } = useForm<Inputs>({
+	const { register, handleSubmit, control, setValue, watch } = useForm<Inputs>({
 		resolver: zodResolver(schema),
 		defaultValues: {
+			customerName: "",
+			stage: "dev",
 			projectName: "",
 			caasApiKey: "",
 			caasUrl: "",
@@ -54,6 +65,7 @@ function Step1() {
 
 	const { errors } = useFormState({ control });
 	const values = useWatch({ control });
+	const selectedStage = watch("stage");
 
 	const testConnection = async () => {
 		try {
@@ -120,6 +132,56 @@ function Step1() {
 			className="flex flex-col gap-4 p-4 w-full"
 			onSubmit={handleSubmit(onSubmit)}
 		>
+			<div>
+				<label
+					htmlFor={customerNameId}
+					className="text-sm font-medium mb-1.5 inline-block"
+				>
+					{t("setup.wizardSetup.step1.form.customerName.label")}
+				</label>
+				<Input
+					type="text"
+					id={customerNameId}
+					placeholder={t(
+						"setup.wizardSetup.step1.form.customerName.placeholder",
+					)}
+					{...register("customerName")}
+					disabled={connectionStatus === "connected"}
+				/>
+				{errors.customerName && (
+					<p className="text-red-500 text-sm mt-1">
+						{t(
+							`setup.wizardSetup.step1.form.customerName.validation.${errors.customerName.message}`,
+						)}
+					</p>
+				)}
+			</div>
+			<div>
+				<label htmlFor={stageId} className="text-sm font-medium mb-1.5 inline-block">
+					{t("setup.wizardSetup.step1.form.stage.label")}
+				</label>
+				<Select
+					value={selectedStage}
+					onValueChange={(value: Inputs["stage"]) => setValue("stage", value)}
+					disabled={connectionStatus === "connected"}
+				>
+					<SelectTrigger id={stageId}>
+						<SelectValue placeholder={t("setup.wizardSetup.step1.form.stage.label")} />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="dev">
+							{t("setup.wizardSetup.step1.form.stage.options.dev")}
+						</SelectItem>
+						<SelectItem value="qa">
+							{t("setup.wizardSetup.step1.form.stage.options.qa")}
+						</SelectItem>
+						<SelectItem value="prod">
+							{t("setup.wizardSetup.step1.form.stage.options.prod")}
+						</SelectItem>
+					</SelectContent>
+				</Select>
+				<input type="hidden" {...register("stage")} />
+			</div>
 			<div>
 				<label
 					htmlFor={projectNameId}

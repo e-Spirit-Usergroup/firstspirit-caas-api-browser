@@ -22,10 +22,18 @@ export const SaveConfigToJson = ({
 
 	const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(json)}`;
 	const downloadAnchorNode = document.createElement("a");
+	const customerName = projectSettings.customerName?.trim().toUpperCase() || "";
+	const stage = projectSettings.stage?.toUpperCase() || "";
+	const projectName = projectSettings.projectName?.trim() || "project";
+	const fileNamePrefix =
+		customerName && stage
+			? `${customerName}_${stage}_${projectName}`
+			: projectName;
+
 	downloadAnchorNode.setAttribute("href", dataStr);
 	downloadAnchorNode.setAttribute(
 		"download",
-		"export_" + projectSettings.projectName + "_" + formattedDate + ".json",
+		"export_" + fileNamePrefix + "_" + formattedDate + ".json",
 	);
 	document.body.appendChild(downloadAnchorNode); // required for firefox
 	downloadAnchorNode.click();
