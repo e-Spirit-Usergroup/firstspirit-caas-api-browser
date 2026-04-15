@@ -32,8 +32,8 @@
 						}
 					},
 					"projectName": {
-						"label": "Project",
-						"placeholder": "Project",
+						"label": "Project name",
+						"placeholder": "Project name",
 						"validation": {
 							"required": "This field is required",
 							"duplicate": "This project already exists for the selected customer and stage"
