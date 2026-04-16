@@ -51,6 +51,9 @@ type ProjectRow = {
 	project: ProjectConfig;
 };
 
+const getProjectKey = (customerName: string, stage: string, projectName: string) =>
+	`${customerName}::${stage}::${projectName}`;
+
 function ManageProjectsDialog({
 	open,
 	onOpenChange,
@@ -114,7 +117,7 @@ function ManageProjectsDialog({
 		() =>
 			sortedProjects.filter((project) =>
 				selectedProjectKeys.has(
-					`${project.customerName}::${project.stage}::${project.projectName}`,
+					getProjectKey(project.customerName, project.stage, project.projectName),
 				),
 			),
 		[sortedProjects, selectedProjectKeys],
@@ -123,7 +126,7 @@ function ManageProjectsDialog({
 		() =>
 			sortedProjects.map(
 				(project) =>
-					`${project.customerName}::${project.stage}::${project.projectName}`,
+					getProjectKey(project.customerName, project.stage, project.projectName),
 			),
 		[sortedProjects],
 	);
@@ -134,7 +137,7 @@ function ManageProjectsDialog({
 		!isAllProjectsSelected && selectedProjectKeys.size > 0;
 
 	const toggleProjectSelection = (project: ProjectRow, checked: boolean) => {
-		const key = `${project.customerName}::${project.stage}::${project.projectName}`;
+		const key = getProjectKey(project.customerName, project.stage, project.projectName);
 		setSelectedProjectKeys((previous) => {
 			const next = new Set(previous);
 			if (checked) {
@@ -158,7 +161,7 @@ function ManageProjectsDialog({
 			return;
 		}
 		removeProject(projectPendingDeletion);
-		const key = `${projectPendingDeletion.customerName}::${projectPendingDeletion.stage}::${projectPendingDeletion.projectName}`;
+		const key = getProjectKey(projectPendingDeletion.customerName, projectPendingDeletion.stage, projectPendingDeletion.projectName);
 		setSelectedProjectKeys((previous) => {
 			const next = new Set(previous);
 			next.delete(key);
@@ -176,7 +179,7 @@ function ManageProjectsDialog({
 	};
 
 	const updateProjectMetadata = async (project: ProjectRow) => {
-		const key = `${project.customerName}::${project.stage}::${project.projectName}`;
+		const key = getProjectKey(project.customerName, project.stage, project.projectName);
 		setUpdatingProjectKey(key);
 		try {
 			const { databaseSchemas, locales } = await discoverSchemasAndLocales({
@@ -316,7 +319,7 @@ function ManageProjectsDialog({
 										<TableCell>
 											<Checkbox
 												checked={selectedProjectKeys.has(
-													`${project.customerName}::${project.stage}::${project.projectName}`,
+													getProjectKey(project.customerName, project.stage, project.projectName),
 												)}
 												onCheckedChange={(checked: boolean | "indeterminate") =>
 													toggleProjectSelection(project, checked === true)
@@ -351,11 +354,11 @@ function ManageProjectsDialog({
 														onClick={() => void updateProjectMetadata(project)}
 														disabled={
 															updatingProjectKey ===
-															`${project.customerName}::${project.stage}::${project.projectName}`
+															getProjectKey(project.customerName, project.stage, project.projectName)
 														}
 													>
 														{updatingProjectKey ===
-														`${project.customerName}::${project.stage}::${project.projectName}`
+														getProjectKey(project.customerName, project.stage, project.projectName)
 															? t("app.settings.manageProjects.updatingProject")
 															: t("app.settings.manageProjects.updateProject")}
 													</DropdownMenuItem>

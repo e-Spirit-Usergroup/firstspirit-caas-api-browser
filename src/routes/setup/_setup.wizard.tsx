@@ -1,4 +1,4 @@
-import Step1 from "@components/entry-wizard/step-1/step-1";
+import SetupForm from "@components/entry-wizard/setup-form";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/setup/_setup/wizard")({
@@ -6,5 +6,5 @@ export const Route = createFileRoute("/setup/_setup/wizard")({
 });
 
 function RouteComponent() {
-	return <Step1 />;
+	return <SetupForm />;
 }

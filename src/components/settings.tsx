@@ -1,9 +1,3 @@
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@components/ui/tooltip';
 import { Description } from '@radix-ui/react-dialog';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,7 +13,7 @@ import { version } from '../../package.json';
 import Icon from './icons/icon';
 import ManageProjectsDialog from './manage-projects-dialog';
 import { Button } from './ui/button';
-import { Checkbox } from './ui/checkbox';
+import { CheckboxFieldWithTooltip } from './ui/checkbox-field-with-tooltip';
 import {
     Dialog,
     DialogContent,
@@ -444,108 +438,33 @@ function Settings() {
                                 {t('app.settings.dialog.queryParams.label')}
                             </h2>
                             <div className="flex items-center gap-8">
-                                <div className="flex items-center gap-2">
-                                    <Checkbox
-                                        checked={localNp}
-                                        onCheckedChange={(checked) =>
-                                            setLocalNp(checked === true)
-                                        }
-                                        id={npId}
-                                    />
-                                    <label
-                                        htmlFor={npId}
-                                        className="text-sm font-medium"
-                                    >
-                                        {t(
-                                            'app.settings.dialog.queryParams.np.label'
-                                        )}
-                                    </label>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <Icon
-                                                    icon="information-circle"
-                                                    className="size-5 text-blue-500"
-                                                />
-                                            </TooltipTrigger>
-                                            <TooltipContent className="max-w-64">
-                                                <p>
-                                                    {t(
-                                                        'app.settings.dialog.queryParams.np.tooltip'
-                                                    )}
-                                                </p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Checkbox
-                                        checked={localRep}
-                                        onCheckedChange={(checked) =>
-                                            setLocalRep(checked === true)
-                                        }
-                                        id={repId}
-                                    />
-                                    <label
-                                        htmlFor={repId}
-                                        className="text-sm font-medium"
-                                    >
-                                        {t(
-                                            'app.settings.dialog.queryParams.repPj.label'
-                                        )}
-                                    </label>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <Icon
-                                                    icon="exclamation-triangle"
-                                                    className="size-5 text-orange-500"
-                                                />
-                                            </TooltipTrigger>
-                                            <TooltipContent className="max-w-64">
-                                                <p>
-                                                    {t(
-                                                        'app.settings.dialog.queryParams.repPj.tooltip'
-                                                    )}
-                                                </p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Checkbox
-                                        checked={localCount}
-                                        onCheckedChange={(checked) =>
-                                            setLocalCount(checked === true)
-                                        }
-                                        id={countId}
-                                    />
-                                    <label
-                                        htmlFor={countId}
-                                        className="text-sm font-medium"
-                                    >
-                                        {t(
-                                            'app.settings.dialog.queryParams.count.label'
-                                        )}
-                                    </label>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <Icon
-                                                    icon="information-circle"
-                                                    className="size-5 text-blue-500"
-                                                />
-                                            </TooltipTrigger>
-                                            <TooltipContent className="max-w-64">
-                                                <p>
-                                                    {t(
-                                                        'app.settings.dialog.queryParams.count.tooltip'
-                                                    )}
-                                                </p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-                                </div>
+                                <CheckboxFieldWithTooltip
+                                    id={npId}
+                                    label={t('app.settings.dialog.queryParams.np.label')}
+                                    checked={localNp}
+                                    onCheckedChange={setLocalNp}
+                                    tooltipIcon="information-circle"
+                                    tooltipIconColor="text-blue-500"
+                                    tooltipText={t('app.settings.dialog.queryParams.np.tooltip')}
+                                />
+                                <CheckboxFieldWithTooltip
+                                    id={repId}
+                                    label={t('app.settings.dialog.queryParams.repPj.label')}
+                                    checked={localRep}
+                                    onCheckedChange={setLocalRep}
+                                    tooltipIcon="exclamation-triangle"
+                                    tooltipIconColor="text-orange-500"
+                                    tooltipText={t('app.settings.dialog.queryParams.repPj.tooltip')}
+                                />
+                                <CheckboxFieldWithTooltip
+                                    id={countId}
+                                    label={t('app.settings.dialog.queryParams.count.label')}
+                                    checked={localCount}
+                                    onCheckedChange={setLocalCount}
+                                    tooltipIcon="information-circle"
+                                    tooltipIconColor="text-blue-500"
+                                    tooltipText={t('app.settings.dialog.queryParams.count.tooltip')}
+                                />
                             </div>
                         </div>
 
