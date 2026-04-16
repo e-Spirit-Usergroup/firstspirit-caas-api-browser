@@ -176,7 +176,9 @@
 				},
 				"addProject": "Add Project",
 				"downloadConfig": "Download Config",
-				"manageProjects": "Manage Projects"
+				"manageProjects": "Manage Projects",
+				"cancel": "Cancel",
+				"save": "Save"
 			},
 			"manageProjects": {
 				"title": "Manage Projects",

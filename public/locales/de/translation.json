@@ -176,7 +176,9 @@
 				},
 				"addProject": "Projekt hinzufügen",
 				"downloadConfig": "Konfiguration herunterladen",
-				"manageProjects": "Projekte verwalten"
+				"manageProjects": "Projekte verwalten",
+				"cancel": "Abbrechen",
+				"save": "Speichern"
 			},
 			"manageProjects": {
 				"title": "Projekte verwalten",

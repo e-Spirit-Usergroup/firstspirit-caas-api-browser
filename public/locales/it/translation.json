@@ -176,7 +176,9 @@
 				},
 				"addProject": "Aggiungi progetto",
 				"downloadConfig": "Scarica configurazione",
-				"manageProjects": "Gestisci progetti"
+				"manageProjects": "Gestisci progetti",
+				"cancel": "Annulla",
+				"save": "Salva"
 			},
 			"manageProjects": {
 				"title": "Gestisci progetti",
