@@ -1,26 +1,19 @@
 import { Description } from "@radix-ui/react-dialog";
-import { MoreHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { discoverSchemasAndLocales } from "@/lib/caas-discovery";
-import { SaveSelectedProjectsToJson } from "@/lib/config";
 import { useCaaSConfigStore } from "@/stores/caas-config-store";
-import type { ProjectConfig } from "@/types/configuration";
-import { stageOptionTexts, stageTypes } from "@/types/stage";
+import { stageTypes } from "@/types/stage";
 import Icon from "./icons/icon";
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "./ui/alert-dialog";
+	BulkDeleteDialog,
+	DeleteProjectDialog,
+	ExportProjectsDialog,
+} from "./project-action-dialogs";
+import type { ProjectRow } from "./projects-table";
+import { ProjectsTable, getProjectKey } from "./projects-table";
 import { Button } from "./ui/button";
-import { Checkbox } from "./ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import {
 	DropdownMenu,
@@ -28,15 +21,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Input } from "./ui/input";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "./ui/table";
 
 type ManageProjectsDialogProps = {
 	open: boolean;
@@ -44,33 +28,17 @@ type ManageProjectsDialogProps = {
 	onAddNewProjectClick: () => void;
 };
 
-type ProjectRow = {
-	customerName: string;
-	stage: (typeof stageTypes)[number];
-	projectName: string;
-	project: ProjectConfig;
-};
-
-const getProjectKey = (customerName: string, stage: string, projectName: string) =>
-	`${customerName}::${stage}::${projectName}`;
-
 function ManageProjectsDialog({
 	open,
 	onOpenChange,
 	onAddNewProjectClick,
 }: ManageProjectsDialogProps) {
 	const { t } = useTranslation();
-	const { customers, removeProject, setProjectSchemasAndLocales } =
-		useCaaSConfigStore();
-	const [selectedProjectKeys, setSelectedProjectKeys] = useState<Set<string>>(
-		new Set(),
-	);
-	const [projectPendingDeletion, setProjectPendingDeletion] =
-		useState<ProjectRow | null>(null);
+	const { customers, removeProject, setProjectSchemasAndLocales } = useCaaSConfigStore();
+	const [selectedProjectKeys, setSelectedProjectKeys] = useState<Set<string>>(new Set());
+	const [projectPendingDeletion, setProjectPendingDeletion] = useState<ProjectRow | null>(null);
 	const [isBulkDeleteAlertOpen, setIsBulkDeleteAlertOpen] = useState(false);
 	const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-	const [exportPassword, setExportPassword] = useState("");
-	const [isExporting, setIsExporting] = useState(false);
 	const [updatingProjectKey, setUpdatingProjectKey] = useState<string | null>(null);
 
 	const projects = useMemo(
@@ -96,15 +64,11 @@ function ManageProjectsDialog({
 					undefined,
 					{ sensitivity: "base" },
 				);
-				if (customerCompare !== 0) {
-					return customerCompare;
-				}
+				if (customerCompare !== 0) return customerCompare;
 
 				const stageCompare =
 					stageTypes.indexOf(left.stage) - stageTypes.indexOf(right.stage);
-				if (stageCompare !== 0) {
-					return stageCompare;
-				}
+				if (stageCompare !== 0) return stageCompare;
 
 				return left.projectName.localeCompare(right.projectName, undefined, {
 					sensitivity: "base",
@@ -122,19 +86,19 @@ function ManageProjectsDialog({
 			),
 		[sortedProjects, selectedProjectKeys],
 	);
+
 	const allProjectKeys = useMemo(
 		() =>
-			sortedProjects.map(
-				(project) =>
-					getProjectKey(project.customerName, project.stage, project.projectName),
+			sortedProjects.map((project) =>
+				getProjectKey(project.customerName, project.stage, project.projectName),
 			),
 		[sortedProjects],
 	);
+
 	const isAllProjectsSelected =
 		allProjectKeys.length > 0 &&
-		allProjectKeys.every((projectKey) => selectedProjectKeys.has(projectKey));
-	const isSomeProjectsSelected =
-		!isAllProjectsSelected && selectedProjectKeys.size > 0;
+		allProjectKeys.every((key) => selectedProjectKeys.has(key));
+	const isSomeProjectsSelected = !isAllProjectsSelected && selectedProjectKeys.size > 0;
 
 	const toggleProjectSelection = (project: ProjectRow, checked: boolean) => {
 		const key = getProjectKey(project.customerName, project.stage, project.projectName);
@@ -148,20 +112,19 @@ function ManageProjectsDialog({
 			return next;
 		});
 	};
+
 	const toggleAllProjectsSelection = (checked: boolean) => {
-		if (checked) {
-			setSelectedProjectKeys(new Set(allProjectKeys));
-			return;
-		}
-		setSelectedProjectKeys(new Set());
+		setSelectedProjectKeys(checked ? new Set(allProjectKeys) : new Set());
 	};
 
 	const deleteSingleProject = () => {
-		if (!projectPendingDeletion) {
-			return;
-		}
+		if (!projectPendingDeletion) return;
 		removeProject(projectPendingDeletion);
-		const key = getProjectKey(projectPendingDeletion.customerName, projectPendingDeletion.stage, projectPendingDeletion.projectName);
+		const key = getProjectKey(
+			projectPendingDeletion.customerName,
+			projectPendingDeletion.stage,
+			projectPendingDeletion.projectName,
+		);
 		setSelectedProjectKeys((previous) => {
 			const next = new Set(previous);
 			next.delete(key);
@@ -171,9 +134,9 @@ function ManageProjectsDialog({
 	};
 
 	const deleteSelectedProjects = () => {
-		selectedProjects.forEach((project) => {
+		for (const project of selectedProjects) {
 			removeProject(project);
-		});
+		}
 		setSelectedProjectKeys(new Set());
 		setIsBulkDeleteAlertOpen(false);
 	};
@@ -215,57 +178,12 @@ function ManageProjectsDialog({
 		}
 	};
 
-	const exportSelectedProjects = async () => {
-		if (!exportPassword.trim()) {
-			return;
-		}
-
-		const customerMap = new Map<
-			string,
-			Record<(typeof stageTypes)[number], ProjectConfig[]>
-		>();
-		for (const project of selectedProjects) {
-			const stages = customerMap.get(project.customerName) ?? {
-				dev: [],
-				qa: [],
-				prod: [],
-			};
-			stages[project.stage].push(project.project);
-			customerMap.set(project.customerName, stages);
-		}
-
-		const customersForExport = Array.from(customerMap.entries()).map(
-			([customerName, stages]) => ({
-				customerName,
-				stages,
-			}),
-		);
-
-		try {
-			setIsExporting(true);
-			await SaveSelectedProjectsToJson(
-				{
-					customers: customersForExport,
-				},
-				exportPassword,
-			);
-			setExportPassword("");
-			setIsExportDialogOpen(false);
-		} catch {
-			toast.error(t("app.settings.manageProjects.exportEncryptionFailed"));
-		} finally {
-			setIsExporting(false);
-		}
-	};
-
 	return (
 		<Dialog
 			open={open}
 			onOpenChange={(nextOpen) => {
 				onOpenChange(nextOpen);
-				if (!nextOpen) {
-					setSelectedProjectKeys(new Set());
-				}
+				if (!nextOpen) setSelectedProjectKeys(new Set());
 			}}
 		>
 			<DialogContent className="sm:max-w-4xl w-[95vw]">
@@ -283,109 +201,17 @@ function ManageProjectsDialog({
 						</a>
 					</Button>
 				</div>
-				<div className="rounded-md border">
-					<Table>
-						<TableHeader>
-							<TableRow>
-								<TableHead className="w-10">
-									<Checkbox
-										checked={
-											isAllProjectsSelected
-												? true
-												: isSomeProjectsSelected
-													? "indeterminate"
-													: false
-										}
-										onCheckedChange={(checked: boolean | "indeterminate") =>
-											toggleAllProjectsSelection(checked === true)
-										}
-										aria-label="Select all projects"
-									/>
-								</TableHead>
-								<TableHead>{t("app.form.customer")}</TableHead>
-								<TableHead>{t("app.form.stage")}</TableHead>
-								<TableHead>{t("app.form.project")}</TableHead>
-								<TableHead className="text-right">
-									{t("app.settings.manageProjects.actions")}
-								</TableHead>
-							</TableRow>
-						</TableHeader>
-						<TableBody>
-							{sortedProjects.length ? (
-								sortedProjects.map((project) => (
-									<TableRow
-										key={`${project.customerName}-${project.stage}-${project.projectName}`}
-									>
-										<TableCell>
-											<Checkbox
-												checked={selectedProjectKeys.has(
-													getProjectKey(project.customerName, project.stage, project.projectName),
-												)}
-												onCheckedChange={(checked: boolean | "indeterminate") =>
-													toggleProjectSelection(project, checked === true)
-												}
-												aria-label={t(
-													"app.settings.manageProjects.selectProject",
-													{
-														projectName: project.projectName,
-													},
-												)}
-											/>
-										</TableCell>
-										<TableCell>{project.customerName}</TableCell>
-										<TableCell>{stageOptionTexts[project.stage]}</TableCell>
-										<TableCell>{project.projectName}</TableCell>
-										<TableCell className="text-right">
-											<DropdownMenu>
-												<DropdownMenuTrigger asChild>
-													<Button
-														type="button"
-														variant="ghost"
-														size="icon"
-														aria-label={t(
-															"app.settings.manageProjects.actions",
-														)}
-													>
-														<MoreHorizontal className="size-4" />
-													</Button>
-												</DropdownMenuTrigger>
-												<DropdownMenuContent align="end">
-													<DropdownMenuItem
-														onClick={() => void updateProjectMetadata(project)}
-														disabled={
-															updatingProjectKey ===
-															getProjectKey(project.customerName, project.stage, project.projectName)
-														}
-													>
-														{updatingProjectKey ===
-														getProjectKey(project.customerName, project.stage, project.projectName)
-															? t("app.settings.manageProjects.updatingProject")
-															: t("app.settings.manageProjects.updateProject")}
-													</DropdownMenuItem>
-													<DropdownMenuItem
-														className="text-destructive focus:text-destructive"
-														onClick={() => setProjectPendingDeletion(project)}
-													>
-														{t("app.settings.manageProjects.removeProject")}
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
-										</TableCell>
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell
-										colSpan={5}
-										className="text-center text-muted-foreground"
-									>
-										{t("app.settings.manageProjects.emptyState")}
-									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</div>
+				<ProjectsTable
+					projects={sortedProjects}
+					selectedProjectKeys={selectedProjectKeys}
+					updatingProjectKey={updatingProjectKey}
+					isAllSelected={isAllProjectsSelected}
+					isSomeSelected={isSomeProjectsSelected}
+					onToggleAll={toggleAllProjectsSelection}
+					onToggleProject={toggleProjectSelection}
+					onUpdateMetadata={(project) => void updateProjectMetadata(project)}
+					onDeleteProject={setProjectPendingDeletion}
+				/>
 				<div className="flex items-center justify-start">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -411,112 +237,25 @@ function ManageProjectsDialog({
 					</DropdownMenu>
 				</div>
 			</DialogContent>
-			<AlertDialog
-				open={isExportDialogOpen}
-				onOpenChange={(nextOpen: boolean) => {
-					setIsExportDialogOpen(nextOpen);
-					if (!nextOpen) {
-						setExportPassword("");
-					}
+
+			<DeleteProjectDialog
+				project={projectPendingDeletion}
+				onConfirm={deleteSingleProject}
+				onOpenChange={(isOpen) => {
+					if (!isOpen) setProjectPendingDeletion(null);
 				}}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>
-							{t("app.settings.manageProjects.exportEncryptionTitle")}
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							{t("app.settings.manageProjects.exportEncryptionDescription")}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<Input
-						type="password"
-						value={exportPassword}
-						onChange={(event) => setExportPassword(event.target.value)}
-						placeholder={t(
-							"app.settings.manageProjects.exportPasswordPlaceholder",
-						)}
-					/>
-					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isExporting}>
-							{t("app.settings.manageProjects.cancel")}
-						</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={(event) => {
-								event.preventDefault();
-								void exportSelectedProjects();
-							}}
-							disabled={!exportPassword.trim() || isExporting}
-						>
-							{t("app.settings.manageProjects.exportConfirm")}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-			<AlertDialog
-				open={projectPendingDeletion !== null}
-				onOpenChange={(nextOpen: boolean) => {
-					if (!nextOpen) {
-						setProjectPendingDeletion(null);
-					}
-				}}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>
-							{t("app.settings.manageProjects.removeProject")}
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							{projectPendingDeletion
-								? t("app.settings.manageProjects.confirmRemove", {
-										customerName: projectPendingDeletion.customerName,
-										projectName: projectPendingDeletion.projectName,
-										stage: stageOptionTexts[projectPendingDeletion.stage],
-									})
-								: ""}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>
-							{t("app.settings.manageProjects.cancel")}
-						</AlertDialogCancel>
-						<AlertDialogAction
-							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-							onClick={deleteSingleProject}
-						>
-							{t("app.settings.manageProjects.confirm")}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-			<AlertDialog
+			/>
+			<BulkDeleteDialog
 				open={isBulkDeleteAlertOpen}
+				count={selectedProjects.length}
+				onConfirm={deleteSelectedProjects}
 				onOpenChange={setIsBulkDeleteAlertOpen}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>
-							{t("app.settings.manageProjects.deleteSelected")}
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							{t("app.settings.manageProjects.confirmRemoveSelected", {
-								count: selectedProjects.length,
-							})}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>
-							{t("app.settings.manageProjects.cancel")}
-						</AlertDialogCancel>
-						<AlertDialogAction
-							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-							onClick={deleteSelectedProjects}
-						>
-							{t("app.settings.manageProjects.confirm")}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			/>
+			<ExportProjectsDialog
+				open={isExportDialogOpen}
+				selectedProjects={selectedProjects}
+				onOpenChange={setIsExportDialogOpen}
+			/>
 		</Dialog>
 	);
 }

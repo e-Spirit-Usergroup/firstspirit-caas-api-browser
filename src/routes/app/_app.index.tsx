@@ -62,6 +62,7 @@ function RouteComponent() {
             : navigate({ to: '/setup' });
     }, [navigate]);
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: We need the customer props as trigger
     useEffect(() => {
         setCurrentUrl('');
         setResponseData(null);
@@ -82,10 +83,10 @@ function RouteComponent() {
         }
     }, [projectSettings?.locales, locale, setLocale]);
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <>
     useEffect(() => {
         if (!hasExecutedRequestRef.current) return;
         handleSubmit(onSubmit)();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mode, locale, handleSubmit]);
 
     async function onSubmit(data: AppFormData) {
@@ -111,18 +112,30 @@ function RouteComponent() {
         });
         const resData = await response.json();
 
-        setPageInfos({ totalPages: resData._total_pages, currentPage: effectivePage });
+        setPageInfos({
+            totalPages: resData._total_pages,
+            currentPage: effectivePage,
+        });
         setResponseData(resData);
     }
 
     function paginate(direction: 'next' | 'previous') {
-        if (direction === 'next' && pageInfos.currentPage < pageInfos.totalPages) {
+        if (
+            direction === 'next' &&
+            pageInfos.currentPage < pageInfos.totalPages
+        ) {
             currentPageRef.current = pageInfos.currentPage + 1;
-            setPageInfos((prev) => ({ ...prev, currentPage: currentPageRef.current }));
+            setPageInfos((prev) => ({
+                ...prev,
+                currentPage: currentPageRef.current,
+            }));
             handleSubmit(onSubmit)();
         } else if (direction === 'previous' && pageInfos.currentPage > 1) {
             currentPageRef.current = pageInfos.currentPage - 1;
-            setPageInfos((prev) => ({ ...prev, currentPage: currentPageRef.current }));
+            setPageInfos((prev) => ({
+                ...prev,
+                currentPage: currentPageRef.current,
+            }));
             handleSubmit(onSubmit)();
         }
     }
@@ -144,7 +157,8 @@ function RouteComponent() {
                 <span
                     className={cn(
                         'inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium inset-ring mb-4',
-                        activeSelection?.stage && stageColors[activeSelection.stage]
+                        activeSelection?.stage &&
+                            stageColors[activeSelection.stage]
                     )}
                 >
                     <span>
@@ -173,10 +187,9 @@ function RouteComponent() {
                         setValue={setValue}
                         register={register}
                     />
-                    <div className="col-span-12" />
                     <div className="col-span-12">
                         <div className="group/button relative inline-block">
-                            <span className="absolute inset-1 group-hover/button:inset-0 rounded-lg bg-linear-to-r from-pink-500 via-fuchsia-600 opacity-75 group-hover/button:opacity-100 to-purple-500 blur-sm transition-all" />
+                            <span className="absolute inset-1 group-hover/button:inset-0 rounded-md bg-linear-to-r from-pink-500 via-fuchsia-600 opacity-75 group-hover/button:opacity-100 to-purple-500 blur-sm transition-all" />
                             <Button
                                 type="submit"
                                 variant="default"
