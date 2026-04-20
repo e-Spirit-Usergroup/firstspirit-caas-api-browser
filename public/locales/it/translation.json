@@ -112,6 +112,11 @@
 				"success": "URL copiato negli appunti",
 				"error": "Nessun URL da copiare"
 			},
+			"copyJsonToClipboardBtn": {
+				"label": "Copia JSON negli appunti",
+				"success": "JSON copiato negli appunti",
+				"error": "Nessun JSON da copiare"
+			},
 			"filterDropdown": {
 				"noFilter": "Nessun filtro",
 				"selectFilterType": "Seleziona un tipo di filtro"

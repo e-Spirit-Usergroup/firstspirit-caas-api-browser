@@ -1,5 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { JSONTree } from 'react-json-tree';
+import Icon from '@/components/icons/icon';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { JSONViewerTheme } from '@/lib/json-viewer-config';
 import { cn } from '@/lib/tw-utils';
 
@@ -7,14 +14,15 @@ type Props = {
     // biome-ignore lint/suspicious/noExplicitAny: explicit any type allowed
     json?: any;
     className?: string;
+    onCopy?: () => void;
 };
 
-export default function JSONViewer({ json, className }: Props) {
+export default function JSONViewer({ json, className, onCopy }: Props) {
     const { t } = useTranslation();
     return (
         <div
             className={cn(
-                'text-sm sm:text-base lg:text-sm xl:text-base rounded-md p-2 w-full',
+                'text-sm sm:text-base lg:text-sm xl:text-base rounded-md p-2 w-full relative',
                 className
             )}
             style={{ backgroundColor: JSONViewerTheme.base00 }}
@@ -31,14 +39,46 @@ export default function JSONViewer({ json, className }: Props) {
                     </div>
                 </div>
             ) : (
-                <JSONTree
-                    data={json}
-                    theme={JSONViewerTheme}
-                    invertTheme={false}
-                    collectionLimit={10}
-                    hideRoot={true}
-                    shouldExpandNodeInitially={() => true}
-                />
+                <>
+                    {onCopy && (
+                        <div className="flex justify-end mb-1 absolute top-4 right-4">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            type="button"
+                                            onClick={onCopy}
+                                            className="px-2.5 py-1 cursor-pointer text-neutral-400 hover:text-neutral-200 transition-colors"
+                                            aria-label={t(
+                                                'app.form.copyJsonToClipboardBtn.label'
+                                            )}
+                                        >
+                                            <Icon
+                                                icon="clipboard"
+                                                className="size-6 text-white"
+                                            />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-64">
+                                        <p>
+                                            {t(
+                                                'app.form.copyJsonToClipboardBtn.label'
+                                            )}
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    )}
+                    <JSONTree
+                        data={json}
+                        theme={JSONViewerTheme}
+                        invertTheme={false}
+                        collectionLimit={10}
+                        hideRoot={true}
+                        shouldExpandNodeInitially={() => true}
+                    />
+                </>
             )}
         </div>
     );

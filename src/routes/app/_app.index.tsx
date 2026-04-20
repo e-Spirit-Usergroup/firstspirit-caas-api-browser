@@ -149,6 +149,15 @@ function RouteComponent() {
         }
     }
 
+    async function onCopyJson() {
+        if (responseData) {
+            await navigator.clipboard.writeText(JSON.stringify(responseData, null, 2));
+            toast.success(t('app.form.copyJsonToClipboardBtn.success'));
+        } else {
+            toast.error(t('app.form.copyJsonToClipboardBtn.error'));
+        }
+    }
+
     return (
         <div className="mx-auto flex h-full w-full flex-col lg:flex-row">
             {/* Left Side - Form */}
@@ -208,6 +217,7 @@ function RouteComponent() {
                 <JSONViewer
                     json={responseData}
                     className="h-full overflow-y-scroll no-scrollbar"
+                    onCopy={onCopyJson}
                 />
                 {pageInfos.totalPages > 1 && (
                     <PaginationControls

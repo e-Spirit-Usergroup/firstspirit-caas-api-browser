@@ -112,6 +112,11 @@
 				"success": "URL in die Zwischenablage kopiert",
 				"error": "Keine URL zum Kopieren vorhanden"
 			},
+			"copyJsonToClipboardBtn": {
+				"label": "JSON in die Zwischenablage kopieren",
+				"success": "JSON in die Zwischenablage kopiert",
+				"error": "Kein JSON zum Kopieren vorhanden"
+			},
 			"filterDropdown": {
 				"noFilter": "Kein Filter",
 				"selectFilterType": "Filtertyp auswählen"

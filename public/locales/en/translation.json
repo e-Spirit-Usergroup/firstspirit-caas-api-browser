@@ -112,6 +112,11 @@
 				"success": "URL copied to clipboard",
 				"error": "No URL to copy"
 			},
+			"copyJsonToClipboardBtn": {
+				"label": "Copy JSON to Clipboard",
+				"success": "JSON copied to clipboard",
+				"error": "No JSON to copy"
+			},
 			"filterDropdown": {
 				"noFilter": "No Filter",
 				"selectFilterType": "Select a Filter Type"
