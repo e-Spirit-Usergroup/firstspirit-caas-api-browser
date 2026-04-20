@@ -69,7 +69,7 @@ const downloadConfigAsJson = (
 
 	const buildAndDownload = async (): Promise<boolean> => {
 		const json = JSON.stringify(
-			{ customers: await toExportedCustomers(customers, password) },
+			{ version: 2, customers: await toExportedCustomers(customers, password) },
 			null,
 			2,
 		);

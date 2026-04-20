@@ -5,6 +5,7 @@ import type {
     CustomerConfig,
     DatabaseSchema,
 } from '@/types/configuration';
+import { migrateV1Config } from '@/stores/caas-config-store';
 import { stageTypes, type StageType } from '@/types/stage';
 
 const stageSet = new Set<StageType>(stageTypes);
@@ -85,7 +86,33 @@ export async function parseImportedConfig(
     config: unknown,
     password?: string,
 ): Promise<{ customers: CustomerConfig[]; activeSelection: ActiveProjectSelection | null }> {
-    if (!config || typeof config !== 'object' || !('customers' in config)) {
+    if (!config || typeof config !== 'object') {
+        throw new Error('Invalid config format. Expected top-level customers array.');
+    }
+
+    const version =
+        typeof (config as { version?: unknown }).version === 'number'
+            ? (config as { version: number }).version
+            : 0;
+
+    if (version < 2 && !('customers' in config)) {
+        const oldFileData = config as {
+            projectSettings?: unknown;
+            databaseSchemas?: unknown;
+            locales?: unknown;
+        };
+        const migrated = migrateV1Config({
+            projectSetupData: oldFileData.projectSettings,
+            databaseSchemas: oldFileData.databaseSchemas,
+            locales: oldFileData.locales,
+        });
+        if (!migrated.customers.length) {
+            throw new Error('Config must contain at least one project');
+        }
+        return migrated;
+    }
+
+    if (!('customers' in config)) {
         throw new Error('Invalid config format. Expected top-level customers array.');
     }
     if (!Array.isArray((config as { customers: unknown }).customers)) {
