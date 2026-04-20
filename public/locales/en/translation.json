@@ -118,11 +118,14 @@
 			},
 			"filterParameterDropdown": {
 				"noFilter": "Select",
-				"selectFilterParameter": "Select a Filter Parameter"
+				"selectFilterParameter": "Select a Filter Parameter",
+				"label": "Filter Parameter"
 			},
 			"entityTypeDropdown": {
 				"noSchemaFilter": "No Schema Filter",
-				"noEntityTypeFilter": "No Entity Type Filter"
+				"noEntityTypeFilter": "No Entity Type Filter",
+				"schemaLabel": "Schema",
+				"entityTypeLabel": "Entity Type"
 			},
 			"error": {
 				"missingUrl": "CaaS URL is not configured",
@@ -206,6 +209,9 @@
 				"confirmRemoveSelected": "Remove {{count}} selected project(s)?"
 			},
 			"executeRequest": "Execute"
+		},
+		"json": {
+			"noResponse": "Execute a Query to get a response"
 		}
 	}
 }

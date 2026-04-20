@@ -11,7 +11,6 @@ import type { StageType } from '@/types/stage';
 import Icon from './icons/icon';
 import ManageProjectsDialog from './manage-projects-dialog';
 import { ProjectSettingsSection } from './project-settings-section';
-import { UpdateSection } from './update-section';
 import { Button } from './ui/button';
 import { CheckboxFieldWithTooltip } from './ui/checkbox-field-with-tooltip';
 import {
@@ -22,6 +21,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from './ui/dialog';
+import { UpdateSection } from './update-section';
 
 function Settings() {
     const { t } = useTranslation();

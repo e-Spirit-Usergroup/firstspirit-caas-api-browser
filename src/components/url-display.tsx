@@ -41,9 +41,15 @@ function UrlDisplay({ url, onCopy }: UrlDisplayProps) {
                     </Tooltip>
                 </TooltipProvider>
             </span>
-            <span className="mt-2 block bg-neutral-300 text-neutral-700 dark:bg-neutral-900 dark:text-blue-400 p-1.5 text-sm font-mono break-all rounded-sm">
-                {url ? decodeURIComponent(url) : t('app.form.noUrlToDisplay')}
-            </span>
+            {url ? (
+                <span className="mt-2 block bg-neutral-300 text-neutral-700 dark:bg-neutral-900 dark:text-blue-400 p-1.5 text-sm font-mono break-all rounded-sm">
+                    {decodeURIComponent(url)}
+                </span>
+            ) : (
+                <span className="mt-2 block p-1.5 text-sm italic text-neutral-400 dark:text-neutral-500">
+                    {t('app.form.noUrlToDisplay')}
+                </span>
+            )}
         </div>
     );
 }

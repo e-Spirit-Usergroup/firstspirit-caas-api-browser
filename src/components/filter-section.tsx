@@ -1,7 +1,6 @@
 import type { UseFormRegister, UseFormSetValue } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -67,7 +66,10 @@ function FilterSection({
     return (
         <>
             {/* Filter type selector */}
-            <div className="col-span-12 flex flex-row gap-4">
+            <div className="col-span-12 flex flex-col gap-1.5">
+                <span className="text-sm">
+                    {t('app.form.filterDropdown.selectFilterType')}
+                </span>
                 <Select
                     onValueChange={(value: FilterType) =>
                         handleFilterTypeChange(value as FilterType | 'none')
@@ -109,9 +111,6 @@ function FilterSection({
                         ))}
                     </SelectContent>
                 </Select>
-                <Label htmlFor={filterSelectId}>
-                    {t('app.form.filterDropdown.selectFilterType')}
-                </Label>
             </div>
 
             {/* Name / Identifier / Route selector */}
@@ -119,77 +118,79 @@ function FilterSection({
                 filterType !== 'none' &&
                 filterType !== 'Dataset' &&
                 filterType !== 'ProjectProperties' && (
-                    <div className="col-span-12 flex gap-4">
-                        <Select
-                            onValueChange={(value: NameOrIdentifier) =>
-                                handleNameOrIdentifierChange(value)
-                            }
-                            value={useNameOrIdentifier}
-                        >
-                            <SelectTrigger
-                                className="flex-initial w-42 gap-2"
-                                id={selectNameOrIdentifierId}
+                    <div className="col-span-12 flex flex-col gap-1.5">
+                        <span className="text-sm">
+                            {t('app.form.filterParameterDropdown.label')}
+                        </span>
+                        <div className="flex gap-4">
+                            <Select
+                                onValueChange={(value: NameOrIdentifier) =>
+                                    handleNameOrIdentifierChange(value)
+                                }
+                                value={useNameOrIdentifier}
                             >
-                                <SelectValue placeholder="Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {(
-                                    Object.keys(
-                                        nameOrIdentifierOptionTexts
-                                    ) as NameOrIdentifier[]
-                                )
-                                    .filter((type) => {
-                                        if (filterType === 'PageRef')
-                                            return true;
-                                        return type !== 'route';
-                                    })
-                                    .map((type) => (
-                                        <SelectItem key={type} value={type}>
-                                            <span className="inline-flex items-center gap-2">
-                                                <span className="inline-block size-3 rounded-full" />
-                                                {
-                                                    nameOrIdentifierOptionTexts[
-                                                        type
-                                                    ]
-                                                }
-                                            </span>
-                                        </SelectItem>
-                                    ))}
-                            </SelectContent>
-                        </Select>
+                                <SelectTrigger
+                                    className="flex-initial w-42 gap-2"
+                                    id={selectNameOrIdentifierId}
+                                >
+                                    <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(
+                                        Object.keys(
+                                            nameOrIdentifierOptionTexts
+                                        ) as NameOrIdentifier[]
+                                    )
+                                        .filter((type) => {
+                                            if (filterType === 'PageRef')
+                                                return true;
+                                            return type !== 'route';
+                                        })
+                                        .map((type) => (
+                                            <SelectItem key={type} value={type}>
+                                                <span className="inline-flex items-center gap-2">
+                                                    <span className="inline-block size-3 rounded-full" />
+                                                    {
+                                                        nameOrIdentifierOptionTexts[
+                                                            type
+                                                        ]
+                                                    }
+                                                </span>
+                                            </SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
 
-                        {useNameOrIdentifier === 'identifier' ? (
-                            <Input
-                                type="text"
-                                placeholder="Identifier"
-                                {...register('identifier')}
-                            />
-                        ) : useNameOrIdentifier === 'name' ? (
-                            <Input
-                                type="text"
-                                placeholder="Name"
-                                {...register('name')}
-                            />
-                        ) : useNameOrIdentifier === 'route' ? (
-                            <Input
-                                type="text"
-                                placeholder="Route"
-                                {...register('route')}
-                            />
-                        ) : (
-                            <Label htmlFor={selectNameOrIdentifierId}>
-                                {t(
-                                    'app.form.filterParameterDropdown.selectFilterParameter'
-                                )}
-                            </Label>
-                        )}
+                            {useNameOrIdentifier === 'identifier' ? (
+                                <Input
+                                    type="text"
+                                    placeholder="Identifier"
+                                    {...register('identifier')}
+                                />
+                            ) : useNameOrIdentifier === 'name' ? (
+                                <Input
+                                    type="text"
+                                    placeholder="Name"
+                                    {...register('name')}
+                                />
+                            ) : useNameOrIdentifier === 'route' ? (
+                                <Input
+                                    type="text"
+                                    placeholder="Route"
+                                    {...register('route')}
+                                />
+                            ) : null}
+                        </div>
                     </div>
                 )}
 
             {/* Dataset schema + entity type selectors */}
             {filterType === 'Dataset' && databaseSchemas?.length ? (
                 <>
-                    <div className="col-span-6">
+                    <div className="col-span-6 flex flex-col gap-1.5">
+                        <span className="text-sm">
+                            {t('app.form.entityTypeDropdown.schemaLabel')}
+                        </span>
                         <Select
                             onValueChange={(value) => {
                                 setValue('schema', value);
@@ -220,7 +221,10 @@ function FilterSection({
                         </Select>
                     </div>
 
-                    <div className="col-span-6">
+                    <div className="col-span-6 flex flex-col gap-1.5">
+                        <span className="text-sm">
+                            {t('app.form.entityTypeDropdown.entityTypeLabel')}
+                        </span>
                         <Select
                             onValueChange={(value) =>
                                 setValue('entityType', value)

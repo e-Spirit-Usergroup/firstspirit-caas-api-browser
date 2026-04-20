@@ -118,11 +118,14 @@
 			},
 			"filterParameterDropdown": {
 				"noFilter": "Auswählen",
-				"selectFilterParameter": "Filterparameter auswählen"
+				"selectFilterParameter": "Filterparameter auswählen",
+				"label": "Filterparameter"
 			},
 			"entityTypeDropdown": {
 				"noSchemaFilter": "Kein Schema Filter",
-				"noEntityTypeFilter": "Kein Entity Type Filter"
+				"noEntityTypeFilter": "Kein Entity Type Filter",
+				"schemaLabel": "Schema",
+				"entityTypeLabel": "Entitätstyp"
 			},
 			"error": {
 				"missingUrl": "CaaS URL ist nicht konfiguriert",
@@ -206,6 +209,9 @@
 				"confirmRemoveSelected": "{{count}} ausgewahlte(s) Projekt(e) entfernen?"
 			},
 			"executeRequest": "Ausführen"
+		},
+		"json": {
+			"noResponse": "Führe eine Abfrage aus, um eine Antwort zu erhalten"
 		}
 	}
 }

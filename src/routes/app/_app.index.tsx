@@ -38,7 +38,7 @@ function RouteComponent() {
     );
     const databaseSchemas = projectSettings?.databaseSchemas;
 
-    const [responseData, setResponseData] = useState(null);
+    const [responseData, setResponseData] = useState<any | null>(null);
     const [currentUrl, setCurrentUrl] = useState('');
     const [pageInfos, setPageInfos] = useState<PageInfos>({
         totalPages: 0,
@@ -152,7 +152,7 @@ function RouteComponent() {
     return (
         <div className="mx-auto flex h-full w-full flex-col lg:flex-row">
             {/* Left Side - Form */}
-            <div className="lg:flex-1 lg:h-screen p-4 overflow-y-scroll no-scrollbar items-center">
+            <div className="lg:h-screen p-4 overflow-y-scroll no-scrollbar items-center lg:w-[40%]">
                 <Navbar />
                 <span
                     className={cn(
@@ -204,7 +204,7 @@ function RouteComponent() {
             </div>
 
             {/* Right Side - Response */}
-            <div className="flex flex-col flex-1 h-svh p-2 overflow-hidden">
+            <div className="flex flex-col h-svh p-2 overflow-hidden lg:w-[60%]">
                 <JSONViewer
                     json={responseData}
                     className="h-full overflow-y-scroll no-scrollbar"
