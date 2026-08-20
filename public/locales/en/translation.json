@@ -10,15 +10,18 @@
 			"description": "Step-by-step in a guided form",
 			"step1": {
 				"form": {
+					"magicPaste": {
+						"label": "Magic Paste",
+						"tooltip": "Paste a full CaaS URL and watch the magic happen.",
+						"success": "Filled customer, stage, and CaaS URL from the clipboard.",
+						"invalidUrl": "The clipboard does not contain a valid CaaS URL.",
+						"clipboardError": "Could not read the clipboard."
+					},
 					"customerName": {
 						"label": "Customer",
-						"placeholder": "Customer",
+						"placeholder": "Customer name",
 						"existingPlaceholder": "Select an existing customer",
-						"emptyState": "No existing customers yet. Enter a new customer name.",
-						"mode": {
-							"newCustomer": "New",
-							"existingCustomer": "Existing"
-						},
+						"addNew": "Add new customer",
 						"validation": {
 							"required": "This field is required"
 						}
@@ -86,6 +89,11 @@
 				"selectDifferentFile": "Click to select a different file"
 			},
 			"dropYourConfigFile": "Drop your configuration file here",
+			"invalidFileType": "Please select a JSON file",
+			"invalidJsonFile": "Invalid JSON file. Please check the file format.",
+			"fileReadError": "Error reading the file. Please try again.",
+			"noDuplicateProjects": "No new projects imported. All imported CaaS URLs already exist.",
+			"importedWithDuplicates": "Imported {{importedCount}} project(s). Skipped {{duplicateCount}} duplicate(s).",
 			"submitBtn": "Use Configuration",
 			"toast": {
 				"configLoadedSuccessfully": "Configuration loaded successfully",
@@ -119,18 +127,25 @@
 			},
 			"filterDropdown": {
 				"noFilter": "No Filter",
-				"selectFilterType": "Select a Filter Type"
+				"selectFilterType": "Select a Filter Type",
+				"placeholder": "Type"
 			},
 			"filterParameterDropdown": {
 				"noFilter": "Select",
 				"selectFilterParameter": "Select a Filter Parameter",
-				"label": "Filter Parameter"
+				"label": "Filter Parameter",
+				"placeholder": "Select",
+				"identifierPlaceholder": "Identifier",
+				"namePlaceholder": "Name",
+				"routePlaceholder": "Route"
 			},
 			"entityTypeDropdown": {
 				"noSchemaFilter": "No Schema Filter",
 				"noEntityTypeFilter": "No Entity Type Filter",
 				"schemaLabel": "Schema",
-				"entityTypeLabel": "Entity Type"
+				"entityTypeLabel": "Entity Type",
+				"schemaPlaceholder": "Select schema",
+				"entityTypePlaceholder": "Select entity type"
 			},
 			"error": {
 				"missingUrl": "CaaS URL is not configured",
@@ -188,6 +203,7 @@
 				"cancel": "Cancel",
 				"save": "Save"
 			},
+			"selectAllProjects": "Select all projects",
 			"manageProjects": {
 				"title": "Manage Projects",
 				"subtitle": "Review and maintain configured projects.",
@@ -216,7 +232,14 @@
 			"executeRequest": "Execute"
 		},
 		"json": {
-			"noResponse": "Execute a Query to get a response"
+			"noResponse": "Execute a Query to get a response",
+			"codeSampleAlt": "Code sample illustration",
+			"executeRequest": "Execute"
+		},
+		"common": {
+			"close": "Close",
+			"uploadConfigAlt": "Upload configuration file illustration",
+			"wizardSetupAlt": "Wizard setup illustration"
 		}
 	}
 }

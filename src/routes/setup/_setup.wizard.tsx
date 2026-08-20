@@ -5,23 +5,27 @@ import {
 } from '@components/entry-wizard/setup-form.schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useId, useMemo, useState } from 'react';
+import { WandSparklesIcon } from 'lucide-react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { type SubmitHandler, useForm, useFormState } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import Icon from '@/components/icons/icon';
 import { Button } from '@/components/ui/button';
 import ConnectionStatusIcon from '@/components/ui/connection-status-icon';
 import { FormField } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { testCaaSConnection } from '@/lib/caas-connection-test';
 import { discoverSchemasAndLocales } from '@/lib/caas-discovery';
+import { parseMagicPasteCaasUrl, MAGIC_PASTE_PROJECT_ID_PLACEHOLDER } from '@/lib/parse-magic-paste-caas-url';
 import { useCaaSConfigStore } from '@/stores/caas-config-store';
 import type { ConnectionStatusType } from '@/types/connection-status';
 import { stageTypes } from '@/types/stage';
@@ -29,6 +33,15 @@ import { stageTypes } from '@/types/stage';
 export const Route = createFileRoute('/setup/_setup/wizard')({
     component: RouteComponent,
 });
+
+function resolveCustomerName(name: string, existingNames: string[]) {
+    const trimmed = name.trim();
+    return (
+        existingNames.find(
+            (existing) => existing.trim().toLowerCase() === trimmed.toLowerCase()
+        ) ?? trimmed
+    );
+}
 
 function RouteComponent() {
     const { upsertProjectSetupData, setProjectSchemasAndLocales, customers } =
@@ -40,6 +53,7 @@ function RouteComponent() {
     const projectNameId = useId();
     const caasApiKeyId = useId();
     const caasUrlId = useId();
+    const caasUrlInputRef = useRef<HTMLInputElement>(null);
 
     const [connectionStatus, setConnectionStatus] =
         useState<ConnectionStatusType>('untouched');
@@ -54,7 +68,7 @@ function RouteComponent() {
         useForm<Inputs>({
             resolver: zodResolver(schema),
             defaultValues: {
-                customerName: '',
+                customerName: customerOptions[0] ?? '',
                 stage: 'dev',
                 projectName: '',
                 caasApiKey: '',
@@ -62,9 +76,14 @@ function RouteComponent() {
             },
             mode: 'onChange',
         });
+    const { ref: caasUrlRef, ...caasUrlRegister } = register('caasUrl');
 
     const onSubmit: SubmitHandler<Inputs> = async (data) => {
-        const normalizedCustomerName = data.customerName.trim().toLowerCase();
+        const customerName = resolveCustomerName(
+            data.customerName,
+            customerOptions
+        );
+        const normalizedCustomerName = customerName.toLowerCase();
         const normalizedProjectName = data.projectName.trim().toLowerCase();
         const hasDuplicateProject = customers.some(
             (customer) =>
@@ -111,9 +130,9 @@ function RouteComponent() {
                 return;
             }
 
-            upsertProjectSetupData(data);
+            upsertProjectSetupData({ ...data, customerName });
             setProjectSchemasAndLocales({
-                customerName: data.customerName.trim(),
+                customerName,
                 stage: data.stage,
                 projectName: data.projectName.trim(),
                 databaseSchemas,
@@ -140,61 +159,149 @@ function RouteComponent() {
 
     const { errors } = useFormState({ control });
     const selectedStage = watch('stage');
+    const customerName = watch('customerName');
     const isFormLocked =
         connectionStatus === 'connected' || isDiscoveringMetadata;
+
+    const onMagicPaste = async () => {
+        let clipboardText = '';
+        try {
+            clipboardText = await navigator.clipboard.readText();
+        } catch {
+            toast.error(t('setup.wizardSetup.step1.form.magicPaste.clipboardError'));
+            return;
+        }
+
+        const parsed = parseMagicPasteCaasUrl(clipboardText);
+        if (!parsed) {
+            toast.error(t('setup.wizardSetup.step1.form.magicPaste.invalidUrl'));
+            return;
+        }
+
+        setValue(
+            'customerName',
+            resolveCustomerName(parsed.customerName, customerOptions),
+            { shouldValidate: true, shouldDirty: true }
+        );
+        setValue('stage', parsed.stage, {
+            shouldValidate: true,
+            shouldDirty: true,
+        });
+        setValue('caasUrl', parsed.caasUrl, {
+            shouldValidate: true,
+            shouldDirty: true,
+        });
+        toast.success(t('setup.wizardSetup.step1.form.magicPaste.success'));
+
+        const placeholderStart = parsed.caasUrl.indexOf(
+            MAGIC_PASTE_PROJECT_ID_PLACEHOLDER
+        );
+        if (placeholderStart >= 0) {
+            requestAnimationFrame(() => {
+                const input = caasUrlInputRef.current;
+                if (!input) {
+                    return;
+                }
+                input.focus();
+                input.setSelectionRange(
+                    placeholderStart,
+                    placeholderStart + MAGIC_PASTE_PROJECT_ID_PLACEHOLDER.length
+                );
+            });
+        }
+    };
 
     return (
         <form
             className="flex flex-col gap-4 p-4 w-full"
             onSubmit={handleSubmit(onSubmit)}
         >
-            <CustomerNameField
-                customers={customerOptions}
-                isFormLocked={isFormLocked}
-                onValueChange={(value, shouldDirty = true) =>
-                    setValue('customerName', value, {
-                        shouldValidate: true,
-                        shouldDirty,
-                    })
-                }
-                error={
-                    errors.customerName
-                        ? t(
-                              `setup.wizardSetup.step1.form.customerName.validation.${errors.customerName.message}`
-                          )
-                        : undefined
-                }
-            />
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-end gap-1.5">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={onMagicPaste}
+                        disabled={isFormLocked}
+                    >
+                        <WandSparklesIcon />
+                        {t('setup.wizardSetup.step1.form.magicPaste.label')}
+                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger
+                                type="button"
+                                className="inline-flex"
+                            >
+                                <Icon
+                                    icon="information-circle"
+                                    className="size-5 text-blue-500"
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-64">
+                                <p>
+                                    {t(
+                                        'setup.wizardSetup.step1.form.magicPaste.tooltip'
+                                    )}
+                                </p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+                <CustomerNameField
+                    customers={customerOptions}
+                    isFormLocked={isFormLocked}
+                    value={customerName}
+                    onValueChange={(value, shouldDirty = true) =>
+                        setValue('customerName', value, {
+                            shouldValidate: true,
+                            shouldDirty,
+                        })
+                    }
+                    error={
+                        errors.customerName
+                            ? t(
+                                  `setup.wizardSetup.step1.form.customerName.validation.${errors.customerName.message}`
+                              )
+                            : undefined
+                    }
+                />
+            </div>
             <input type="hidden" {...register('customerName')} />
 
             <FormField
                 label={t('setup.wizardSetup.step1.form.stage.label')}
-                htmlFor={stageId}
             >
-                <Select
+                <RadioGroup
                     value={selectedStage}
                     onValueChange={(value: Inputs['stage']) =>
                         setValue('stage', value)
                     }
                     disabled={isFormLocked}
+                    className="w-fit"
+                    aria-label={t('setup.wizardSetup.step1.form.stage.label')}
                 >
-                    <SelectTrigger id={stageId}>
-                        <SelectValue
-                            placeholder={t(
-                                'setup.wizardSetup.step1.form.stage.label'
-                            )}
-                        />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {stageTypes.map((stage) => (
-                            <SelectItem key={stage} value={stage}>
-                                {t(
-                                    `setup.wizardSetup.step1.form.stage.options.${stage}`
-                                )}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                    {stageTypes.map((stage) => {
+                        const optionId = `${stageId}-${stage}`;
+                        return (
+                            <div
+                                key={stage}
+                                className="flex items-center gap-3"
+                            >
+                                <RadioGroupItem
+                                    value={stage}
+                                    id={optionId}
+                                />
+                                <Label htmlFor={optionId}>
+                                    {t(
+                                        `setup.wizardSetup.step1.form.stage.options.${stage}`
+                                    )}
+                                </Label>
+                            </div>
+                        );
+                    })}
+                </RadioGroup>
                 <input type="hidden" {...register('stage')} />
             </FormField>
 
@@ -259,7 +366,11 @@ function RouteComponent() {
                     placeholder={t(
                         'setup.wizardSetup.step1.form.caasUrl.placeholder'
                     )}
-                    {...register('caasUrl')}
+                    {...caasUrlRegister}
+                    ref={(element) => {
+                        caasUrlRef(element);
+                        caasUrlInputRef.current = element;
+                    }}
                     disabled={isFormLocked}
                 />
             </FormField>

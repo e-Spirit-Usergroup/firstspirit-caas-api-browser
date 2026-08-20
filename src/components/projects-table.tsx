@@ -74,7 +74,7 @@ function ProjectsTable({
                                 onCheckedChange={(
                                     checked: boolean | 'indeterminate'
                                 ) => onToggleAll(checked === true)}
-                                aria-label="Select all projects"
+                                aria-label={t('app.settings.selectAllProjects')}
                             />
                         </TableHead>
                         <TableHead>{t('app.form.customer')}</TableHead>

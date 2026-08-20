@@ -179,11 +179,18 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
             upsertProjectSetupData: (projectSetupData) =>
                 set((state) => {
                     const customers = [...state.customers];
-                    const customerName = projectSetupData.customerName.trim();
-                    const projectName = projectSetupData.projectName.trim();
+                    const trimmedCustomerName =
+                        projectSetupData.customerName.trim();
                     const customerIndex = customers.findIndex(
-                        (item) => item.customerName === customerName
+                        (item) =>
+                            item.customerName.trim().toLowerCase() ===
+                            trimmedCustomerName.toLowerCase()
                     );
+                    const customerName =
+                        customerIndex >= 0
+                            ? customers[customerIndex].customerName
+                            : trimmedCustomerName;
+                    const projectName = projectSetupData.projectName.trim();
                     const nextCustomer =
                         customerIndex >= 0
                             ? { ...customers[customerIndex] }

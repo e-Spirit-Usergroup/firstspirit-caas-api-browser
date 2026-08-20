@@ -80,7 +80,7 @@ function FilterSection({
                         className="flex-initial w-46"
                         id={filterSelectId}
                     >
-                        <SelectValue placeholder="Type" />
+                        <SelectValue placeholder={t('app.form.filterDropdown.placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="none">
@@ -133,7 +133,7 @@ function FilterSection({
                                     className="flex-initial w-42 gap-2"
                                     id={selectNameOrIdentifierId}
                                 >
-                                    <SelectValue placeholder="Select" />
+                                    <SelectValue placeholder={t('app.form.filterParameterDropdown.placeholder')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {(
@@ -164,19 +164,19 @@ function FilterSection({
                             {useNameOrIdentifier === 'identifier' ? (
                                 <Input
                                     type="text"
-                                    placeholder="Identifier"
+                                    placeholder={t('app.form.filterParameterDropdown.identifierPlaceholder')}
                                     {...register('identifier')}
                                 />
                             ) : useNameOrIdentifier === 'name' ? (
                                 <Input
                                     type="text"
-                                    placeholder="Name"
+                                    placeholder={t('app.form.filterParameterDropdown.namePlaceholder')}
                                     {...register('name')}
                                 />
                             ) : useNameOrIdentifier === 'route' ? (
                                 <Input
                                     type="text"
-                                    placeholder="Route"
+                                    placeholder={t('app.form.filterParameterDropdown.routePlaceholder')}
                                     {...register('route')}
                                 />
                             ) : null}
@@ -199,7 +199,7 @@ function FilterSection({
                             value={schema ?? 'none'}
                         >
                             <SelectTrigger className="flex-initial">
-                                <SelectValue placeholder="Select schema" />
+                                <SelectValue placeholder={t('app.form.entityTypeDropdown.schemaPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="none">
@@ -233,7 +233,7 @@ function FilterSection({
                             disabled={!schema || schema === 'none'}
                         >
                             <SelectTrigger className="flex-initial">
-                                <SelectValue placeholder="Select entity type" />
+                                <SelectValue placeholder={t('app.form.entityTypeDropdown.entityTypePlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="none">

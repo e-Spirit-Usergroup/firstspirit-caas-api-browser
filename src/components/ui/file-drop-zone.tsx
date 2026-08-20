@@ -35,7 +35,7 @@ function FileDropZone({ selectedFile, onFileSelect }: FileDropZoneProps) {
         if (file.type === 'application/json' || file.name.endsWith('.json')) {
             onFileSelect(file);
         } else {
-            toast.error('Please select a JSON file');
+            toast.error(t('setup.fileUpload.invalidFileType'));
         }
     };
 

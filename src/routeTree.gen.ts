@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SetupSetupRouteImport } from './routes/setup/_setup'
-import { Route as SetupSetupIndexRouteImport } from './routes/setup/_setup.index'
 import { Route as AppAppIndexRouteImport } from './routes/app/_app.index'
-import { Route as SetupSetupWizardRouteImport } from './routes/setup/_setup.wizard'
+import { Route as SetupSetupIndexRouteImport } from './routes/setup/_setup.index'
 import { Route as SetupSetupFileUploadRouteImport } from './routes/setup/_setup.file-upload'
+import { Route as SetupSetupWizardRouteImport } from './routes/setup/_setup.wizard'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -26,24 +26,24 @@ const SetupSetupRoute = SetupSetupRouteImport.update({
   path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SetupSetupIndexRoute = SetupSetupIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SetupSetupRoute,
-} as any)
 const AppAppIndexRoute = AppAppIndexRouteImport.update({
   id: '/app/_app/',
   path: '/app/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SetupSetupWizardRoute = SetupSetupWizardRouteImport.update({
-  id: '/wizard',
-  path: '/wizard',
+const SetupSetupIndexRoute = SetupSetupIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => SetupSetupRoute,
 } as any)
 const SetupSetupFileUploadRoute = SetupSetupFileUploadRouteImport.update({
   id: '/file-upload',
   path: '/file-upload',
+  getParentRoute: () => SetupSetupRoute,
+} as any)
+const SetupSetupWizardRoute = SetupSetupWizardRouteImport.update({
+  id: '/wizard',
+  path: '/wizard',
   getParentRoute: () => SetupSetupRoute,
 } as any)
 
@@ -114,13 +114,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetupSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/setup/_setup/': {
-      id: '/setup/_setup/'
-      path: '/'
-      fullPath: '/setup/'
-      preLoaderRoute: typeof SetupSetupIndexRouteImport
-      parentRoute: typeof SetupSetupRoute
-    }
     '/app/_app/': {
       id: '/app/_app/'
       path: '/app'
@@ -128,11 +121,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/setup/_setup/wizard': {
-      id: '/setup/_setup/wizard'
-      path: '/wizard'
-      fullPath: '/setup/wizard'
-      preLoaderRoute: typeof SetupSetupWizardRouteImport
+    '/setup/_setup/': {
+      id: '/setup/_setup/'
+      path: '/'
+      fullPath: '/setup/'
+      preLoaderRoute: typeof SetupSetupIndexRouteImport
       parentRoute: typeof SetupSetupRoute
     }
     '/setup/_setup/file-upload': {
@@ -140,6 +133,13 @@ declare module '@tanstack/react-router' {
       path: '/file-upload'
       fullPath: '/setup/file-upload'
       preLoaderRoute: typeof SetupSetupFileUploadRouteImport
+      parentRoute: typeof SetupSetupRoute
+    }
+    '/setup/_setup/wizard': {
+      id: '/setup/_setup/wizard'
+      path: '/wizard'
+      fullPath: '/setup/wizard'
+      preLoaderRoute: typeof SetupSetupWizardRouteImport
       parentRoute: typeof SetupSetupRoute
     }
   }

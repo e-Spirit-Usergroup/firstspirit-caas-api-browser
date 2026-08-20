@@ -60,9 +60,7 @@ function RouteComponent() {
             mergeImportedCustomers(store.customers, customers);
 
         if (importedCount === 0) {
-            toast.error(
-                'No new projects imported. All imported CaaS URLs already exist.'
-            );
+            toast.error(t('setup.fileUpload.noDuplicateProjects'));
             return false;
         }
 
@@ -71,7 +69,7 @@ function RouteComponent() {
         toast.success(t('setup.fileUpload.toast.configLoadedSuccessfully'));
         if (duplicateCount > 0) {
             toast.success(
-                `Imported ${importedCount} project(s). Skipped ${duplicateCount} duplicate(s).`
+                t('setup.fileUpload.importedWithDuplicates', { importedCount, duplicateCount })
             );
         }
         setUploadSuccessful(true);
@@ -91,11 +89,11 @@ function RouteComponent() {
                 }
                 await applyParsedConfig(config);
             } catch {
-                toast.error('Invalid JSON file. Please check the file format.');
+                toast.error(t('setup.fileUpload.invalidJsonFile'));
             }
         };
         reader.onerror = () => {
-            toast.error('Error reading the file. Please try again.');
+            toast.error(t('setup.fileUpload.fileReadError'));
         };
         reader.readAsText(selectedFile as Blob);
     };
@@ -126,7 +124,7 @@ function RouteComponent() {
                 );
                 return;
             }
-            toast.error('Invalid JSON file. Please check the file format.');
+            toast.error(t('setup.fileUpload.invalidJsonFile'));
         } finally {
             setIsDecryptingImport(false);
         }

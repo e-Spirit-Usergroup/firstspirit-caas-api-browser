@@ -130,7 +130,7 @@ function ProjectSettingsSection({
 						disabled={!localeOptions.length}
 					>
 						<SelectTrigger className="w-full">
-							<SelectValue placeholder="locale" />
+							<SelectValue placeholder={t("app.settings.dialog.locale.label")} />
 						</SelectTrigger>
 						<SelectContent>
 							{localeOptions.map((loc) => (
@@ -148,7 +148,7 @@ function ProjectSettingsSection({
 						onValueChange={(value) => onModeChange(value as ModeType)}
 					>
 						<SelectTrigger className="w-full">
-							<SelectValue placeholder="mode" />
+							<SelectValue placeholder={t("app.settings.dialog.mode.label")} />
 						</SelectTrigger>
 						<SelectContent>
 							{modeTypes.map((modeType) => (

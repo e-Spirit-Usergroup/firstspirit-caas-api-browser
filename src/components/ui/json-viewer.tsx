@@ -32,7 +32,7 @@ export default function JSONViewer({ json, className, onCopy }: Props) {
                     <div className="flex flex-col gap-2">
                         <img
                             src="/undraw/undraw_code-sample_kpju.svg"
-                            alt="wizard"
+                            alt={t('app.json.codeSampleAlt')}
                             className="w-full max-w-48 max-h-48 mx-auto mt-4"
                         />
                         <p className="text-white">{t('app.json.noResponse')}</p>

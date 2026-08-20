@@ -10,15 +10,18 @@
 			"description": "Schritt-für-Schritt in einem geführten Formular",
 			"step1": {
 				"form": {
+					"magicPaste": {
+						"label": "Magic Paste",
+						"tooltip": "Fügen Sie eine vollständige CaaS-URL ein und erleben Sie die Magie.",
+						"success": "Kunde, Stage und CaaS-URL wurden aus der Zwischenablage übernommen.",
+						"invalidUrl": "Die Zwischenablage enthält keine gültige CaaS-URL.",
+						"clipboardError": "Die Zwischenablage konnte nicht gelesen werden."
+					},
 					"customerName": {
 						"label": "Kunde",
-						"placeholder": "Kunde",
+						"placeholder": "Kundenname",
 						"existingPlaceholder": "Vorhandenen Kunden auswählen",
-						"emptyState": "Noch keine vorhandenen Kunden. Geben Sie einen neuen Kundennamen ein.",
-						"mode": {
-							"newCustomer": "Neu",
-							"existingCustomer": "Vorhanden"
-						},
+						"addNew": "Neuen Kunden hinzufügen",
 						"validation": {
 							"required": "Dieses Feld ist erforderlich"
 						}
@@ -86,6 +89,11 @@
 				"selectDifferentFile": "Klicken Sie, um eine andere Datei auszuwählen"
 			},
 			"dropYourConfigFile": "Legen Sie Ihre Konfigurationsdatei hier ab",
+			"invalidFileType": "Bitte wählen Sie eine JSON-Datei aus",
+			"invalidJsonFile": "Ungültige JSON-Datei. Bitte überprüfen Sie das Dateiformat.",
+			"fileReadError": "Fehler beim Lesen der Datei. Bitte versuchen Sie es erneut.",
+			"noDuplicateProjects": "Keine neuen Projekte importiert. Alle importierten CaaS-URLs existieren bereits.",
+			"importedWithDuplicates": "{{importedCount}} Projekt(e) importiert. {{duplicateCount}} Duplikat(e) übersprungen.",
 			"submitBtn": "Konfiguration benutzen",
 			"toast": {
 				"configLoadedSuccessfully": "Konfiguration erfolgreich geladen",
@@ -119,18 +127,25 @@
 			},
 			"filterDropdown": {
 				"noFilter": "Kein Filter",
-				"selectFilterType": "Filtertyp auswählen"
+				"selectFilterType": "Filtertyp auswählen",
+				"placeholder": "Typ"
 			},
 			"filterParameterDropdown": {
 				"noFilter": "Auswählen",
 				"selectFilterParameter": "Filterparameter auswählen",
-				"label": "Filterparameter"
+				"label": "Filterparameter",
+				"placeholder": "Auswählen",
+				"identifierPlaceholder": "Identifier",
+				"namePlaceholder": "Name",
+				"routePlaceholder": "Route"
 			},
 			"entityTypeDropdown": {
 				"noSchemaFilter": "Kein Schema Filter",
 				"noEntityTypeFilter": "Kein Entity Type Filter",
 				"schemaLabel": "Schema",
-				"entityTypeLabel": "Entitätstyp"
+				"entityTypeLabel": "Entitätstyp",
+				"schemaPlaceholder": "Schema auswählen",
+				"entityTypePlaceholder": "Entitätstyp auswählen"
 			},
 			"error": {
 				"missingUrl": "CaaS URL ist nicht konfiguriert",
@@ -188,6 +203,7 @@
 				"cancel": "Abbrechen",
 				"save": "Speichern"
 			},
+			"selectAllProjects": "Alle Projekte auswählen",
 			"manageProjects": {
 				"title": "Projekte verwalten",
 				"subtitle": "Konfigurierte Projekte anzeigen und pflegen.",
@@ -216,7 +232,14 @@
 			"executeRequest": "Ausführen"
 		},
 		"json": {
-			"noResponse": "Führe eine Abfrage aus, um eine Antwort zu erhalten"
+			"noResponse": "Führe eine Abfrage aus, um eine Antwort zu erhalten",
+			"codeSampleAlt": "Code-Beispiel Illustration",
+			"executeRequest": "Ausführen"
+		},
+		"common": {
+			"close": "Schließen",
+			"uploadConfigAlt": "Konfigurationsdatei hochladen Illustration",
+			"wizardSetupAlt": "Assistenten-Einrichtung Illustration"
 		}
 	}
 }

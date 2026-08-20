@@ -1,18 +1,22 @@
-import { useEffect, useId, useState } from "react";
+import { PlusIcon } from "lucide-react";
+import { useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
+	SelectSeparator,
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
 
+const ADD_NEW_CUSTOMER_VALUE = "__add_new_customer__";
+
 type CustomerNameFieldProps = {
 	customers: string[];
 	isFormLocked: boolean;
+	value: string;
 	onValueChange: (value: string, shouldDirty?: boolean) => void;
 	error?: string;
 };
@@ -20,154 +24,80 @@ type CustomerNameFieldProps = {
 function CustomerNameField({
 	customers,
 	isFormLocked,
+	value,
 	onValueChange,
 	error,
 }: CustomerNameFieldProps) {
 	const { t } = useTranslation();
 	const customerNameId = useId();
 	const existingCustomerId = useId();
+	const newCustomerInputRef = useRef<HTMLInputElement>(null);
 
 	const hasCustomerOptions = customers.length > 0;
-	const [customerInputMode, setCustomerInputMode] = useState<"new" | "existing">(
-		hasCustomerOptions ? "existing" : "new",
-	);
-	const [newCustomerName, setNewCustomerName] = useState("");
-	const [existingCustomerName, setExistingCustomerName] = useState(
-		customers[0] ?? "",
-	);
+	const isExistingSelection = hasCustomerOptions && customers.includes(value);
+	const isAddingNew = !isExistingSelection;
+	const selectValue = isExistingSelection ? value : ADD_NEW_CUSTOMER_VALUE;
 
-	useEffect(() => {
-		if (!hasCustomerOptions && customerInputMode === "existing") {
-			setCustomerInputMode("new");
-			onValueChange(newCustomerName, true);
+	const onSelectChange = (nextValue: string) => {
+		if (nextValue === ADD_NEW_CUSTOMER_VALUE) {
+			onValueChange("", true);
+			requestAnimationFrame(() => newCustomerInputRef.current?.focus());
 			return;
 		}
-		if (hasCustomerOptions && !customers.includes(existingCustomerName)) {
-			const fallback = customers[0];
-			setExistingCustomerName(fallback);
-			if (customerInputMode === "existing") {
-				onValueChange(fallback, true);
-			}
-		}
-	}, [
-		customerInputMode,
-		customers,
-		existingCustomerName,
-		hasCustomerOptions,
-		newCustomerName,
-		onValueChange,
-	]);
-
-	useEffect(() => {
-		if (
-			customerInputMode === "existing" &&
-			hasCustomerOptions &&
-			!existingCustomerName
-		) {
-			const value = customers[0] ?? "";
-			setExistingCustomerName(value);
-			onValueChange(value, false);
-		}
-	}, [
-		customerInputMode,
-		customers,
-		existingCustomerName,
-		hasCustomerOptions,
-		onValueChange,
-	]);
-
-	const onCustomerModeChange = (mode: "new" | "existing") => {
-		if (mode === "existing" && !hasCustomerOptions) {
-			setCustomerInputMode("new");
-			onValueChange(newCustomerName, true);
-			return;
-		}
-		setCustomerInputMode(mode);
-		if (mode === "existing") {
-			const value = existingCustomerName || customers[0];
-			setExistingCustomerName(value);
-			onValueChange(value, true);
-			return;
-		}
-		onValueChange(newCustomerName, true);
+		onValueChange(nextValue, true);
 	};
 
 	return (
 		<div className="min-w-0">
 			<label
-				htmlFor={
-					customerInputMode === "existing" ? existingCustomerId : customerNameId
-				}
-				className="text-sm font-medium mb-1.5 inline-block"
+				htmlFor={isAddingNew ? customerNameId : existingCustomerId}
+				className="mb-1.5 inline-block text-sm font-medium"
 			>
 				{t("setup.wizardSetup.step1.form.customerName.label")}
 			</label>
-			{hasCustomerOptions && (
-				<div className="mb-2 grid grid-cols-2 gap-2">
-					<Button
-						type="button"
-						variant={customerInputMode === "new" ? "default" : "outline"}
-						onClick={() => onCustomerModeChange("new")}
+			<div className="flex flex-col gap-2">
+				{hasCustomerOptions && (
+					<Select
+						value={selectValue}
+						onValueChange={onSelectChange}
 						disabled={isFormLocked}
-						className="w-full"
 					>
-						{t("setup.wizardSetup.step1.form.customerName.mode.newCustomer")}
-					</Button>
-					<Button
-						type="button"
-						variant={customerInputMode === "existing" ? "default" : "outline"}
-						onClick={() => onCustomerModeChange("existing")}
-						disabled={isFormLocked}
-						className="w-full"
-					>
-						{t(
-							"setup.wizardSetup.step1.form.customerName.mode.existingCustomer",
-						)}
-					</Button>
-				</div>
-			)}
-			{(!hasCustomerOptions || customerInputMode === "new") && (
-				<Input
-					type="text"
-					id={customerNameId}
-					placeholder={t(
-						"setup.wizardSetup.step1.form.customerName.placeholder",
-					)}
-					value={newCustomerName}
-					onChange={(event) => {
-						const value = event.target.value;
-						setNewCustomerName(value);
-						onValueChange(value, true);
-					}}
-					disabled={isFormLocked}
-				/>
-			)}
-			{customerInputMode === "existing" && hasCustomerOptions && (
-				<Select
-					value={existingCustomerName}
-					onValueChange={(value) => {
-						setExistingCustomerName(value);
-						onValueChange(value, true);
-					}}
-					disabled={isFormLocked}
-				>
-					<SelectTrigger id={existingCustomerId}>
-						<SelectValue
-							placeholder={t(
-								"setup.wizardSetup.step1.form.customerName.existingPlaceholder",
-							)}
-						/>
-					</SelectTrigger>
-					<SelectContent>
-						{customers.map((name) => (
-							<SelectItem key={name} value={name}>
-								{name}
+						<SelectTrigger id={existingCustomerId} className="w-full">
+							<SelectValue
+								placeholder={t(
+									"setup.wizardSetup.step1.form.customerName.existingPlaceholder",
+								)}
+							/>
+						</SelectTrigger>
+						<SelectContent>
+							{customers.map((name) => (
+								<SelectItem key={name} value={name}>
+									{name}
+								</SelectItem>
+							))}
+							<SelectSeparator />
+							<SelectItem value={ADD_NEW_CUSTOMER_VALUE}>
+								<PlusIcon />
+								{t("setup.wizardSetup.step1.form.customerName.addNew")}
 							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-			)}
-			{error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+						</SelectContent>
+					</Select>
+				)}
+				{isAddingNew && (
+					<Input
+						ref={newCustomerInputRef}
+						type="text"
+						id={customerNameId}
+						placeholder={t(
+							"setup.wizardSetup.step1.form.customerName.placeholder",
+						)}
+						value={value}
+						onChange={(event) => onValueChange(event.target.value, true)}
+						disabled={isFormLocked}
+					/>
+				)}
+			</div>
+			{error && <p className="mt-1 text-sm text-red-500">{error}</p>}
 		</div>
 	);
 }

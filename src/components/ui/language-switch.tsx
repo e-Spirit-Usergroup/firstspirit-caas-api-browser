@@ -23,7 +23,7 @@ function LanguageSwitch({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
                     setLanguage(val as typeof language);
                 }}
             >
-                <SelectTrigger className="shadow-none! border-none! bg-transparent!">
+                <SelectTrigger className="shadow-none! border-none! bg-transparent! dark:bg-transparent!">
                     <Icon icon="translate" className="size-5" />
                 </SelectTrigger>
                 <SelectContent>
