@@ -68,7 +68,14 @@ function ProjectSettingsSection({
 			<div className="grid grid-cols-3 gap-3">
 				<div className="flex flex-col gap-1.5">
 					<span className="text-sm">{t("app.form.customer")}</span>
-					<Select value={localCustomerName} onValueChange={onCustomerChange}>
+					<Select
+						value={localCustomerName}
+						items={customerOptions.map((name) => ({
+							value: name,
+							label: name,
+						}))}
+						onValueChange={onCustomerChange}
+					>
 						<SelectTrigger className="w-full">
 							<SelectValue placeholder={t("app.form.customer")} />
 						</SelectTrigger>
@@ -85,6 +92,10 @@ function ProjectSettingsSection({
 					<span className="text-sm">{t("app.form.stage")}</span>
 					<Select
 						value={localStage}
+						items={stageOptions.map((stage) => ({
+							value: stage,
+							label: stageOptionTexts[stage],
+						}))}
 						onValueChange={(value) => onStageChange(value as StageType)}
 						disabled={!stageOptions.length}
 					>
@@ -104,6 +115,10 @@ function ProjectSettingsSection({
 					<span className="text-sm">{t("app.form.project")}</span>
 					<Select
 						value={localProjectName}
+						items={projectOptions.map((project) => ({
+							value: project.projectName,
+							label: project.projectName,
+						}))}
 						onValueChange={onProjectChange}
 						disabled={!projectOptions.length}
 					>
@@ -112,7 +127,10 @@ function ProjectSettingsSection({
 						</SelectTrigger>
 						<SelectContent>
 							{projectOptions.map((project) => (
-								<SelectItem key={project.projectName} value={project.projectName}>
+								<SelectItem
+									key={project.projectName}
+									value={project.projectName}
+								>
 									{project.projectName}
 								</SelectItem>
 							))}
@@ -123,14 +141,22 @@ function ProjectSettingsSection({
 
 			<div className="grid grid-cols-2 gap-3">
 				<div className="flex flex-col gap-1.5">
-					<span className="text-sm">{t("app.settings.dialog.locale.label")}</span>
+					<span className="text-sm">
+						{t("app.settings.dialog.locale.label")}
+					</span>
 					<Select
 						value={localLocale}
+						items={localeOptions.map((loc) => ({
+							value: loc,
+							label: loc,
+						}))}
 						onValueChange={onLocaleChange}
 						disabled={!localeOptions.length}
 					>
 						<SelectTrigger className="w-full">
-							<SelectValue placeholder={t("app.settings.dialog.locale.label")} />
+							<SelectValue
+								placeholder={t("app.settings.dialog.locale.label")}
+							/>
 						</SelectTrigger>
 						<SelectContent>
 							{localeOptions.map((loc) => (
@@ -145,6 +171,10 @@ function ProjectSettingsSection({
 					<span className="text-sm">{t("app.settings.dialog.mode.label")}</span>
 					<Select
 						value={localMode}
+						items={modeTypes.map((modeType) => ({
+							value: modeType,
+							label: modeOptionTexts[modeType],
+						}))}
 						onValueChange={(value) => onModeChange(value as ModeType)}
 					>
 						<SelectTrigger className="w-full">

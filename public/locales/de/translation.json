@@ -131,7 +131,7 @@
 				"placeholder": "Typ"
 			},
 			"filterParameterDropdown": {
-				"noFilter": "Auswählen",
+				"noFilter": "Kein Filterparameter",
 				"selectFilterParameter": "Filterparameter auswählen",
 				"label": "Filterparameter",
 				"placeholder": "Auswählen",
@@ -238,6 +238,7 @@
 		},
 		"common": {
 			"close": "Schließen",
+			"loading": "Wird geladen",
 			"uploadConfigAlt": "Konfigurationsdatei hochladen Illustration",
 			"wizardSetupAlt": "Assistenten-Einrichtung Illustration"
 		}

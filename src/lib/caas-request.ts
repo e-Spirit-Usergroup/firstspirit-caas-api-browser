@@ -54,9 +54,15 @@ export function buildCaaSRequest(
 		if (data.entityType && data.entityType !== "none") {
 			filter = { ...filter, entityType: data.entityType };
 		}
-		if (data.name) filter = { ...filter, name: data.name };
-		if (data.identifier) filter = { ...filter, identifier: data.identifier };
-		if (data.route) filter = { ...filter, route: data.route };
+		if (data.useNameOrIdentifier === "name" && data.name) {
+			filter = { ...filter, name: data.name };
+		}
+		if (data.useNameOrIdentifier === "identifier" && data.identifier) {
+			filter = { ...filter, identifier: data.identifier };
+		}
+		if (data.useNameOrIdentifier === "route" && data.route) {
+			filter = { ...filter, route: data.route };
+		}
 	}
 
 	searchParams.append("filter", JSON.stringify(filter));

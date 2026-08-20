@@ -131,7 +131,7 @@
 				"placeholder": "Tipo"
 			},
 			"filterParameterDropdown": {
-				"noFilter": "Seleziona",
+				"noFilter": "Nessun parametro di filtro",
 				"selectFilterParameter": "Seleziona un parametro di filtro",
 				"label": "Parametro di filtro",
 				"placeholder": "Seleziona",
@@ -238,6 +238,7 @@
 		},
 		"common": {
 			"close": "Chiudi",
+			"loading": "Caricamento",
 			"uploadConfigAlt": "Illustrazione caricamento file di configurazione",
 			"wizardSetupAlt": "Illustrazione configurazione guidata"
 		}

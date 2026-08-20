@@ -1,8 +1,9 @@
-import { Description } from "@radix-ui/react-dialog";
+import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { discoverSchemasAndLocales } from "@/lib/caas-discovery";
+import { cn } from "@/lib/tw-utils";
 import { useCaaSConfigStore } from "@/stores/caas-config-store";
 import { stageTypes } from "@/types/stage";
 import Icon from "./icons/icon";
@@ -12,9 +13,15 @@ import {
 	ExportProjectsDialog,
 } from "./project-action-dialogs";
 import type { ProjectRow } from "./projects-table";
-import { ProjectsTable, getProjectKey } from "./projects-table";
-import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { getProjectKey, ProjectsTable } from "./projects-table";
+import { Button, buttonVariants } from "./ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from "./ui/dialog";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -34,12 +41,18 @@ function ManageProjectsDialog({
 	onAddNewProjectClick,
 }: ManageProjectsDialogProps) {
 	const { t } = useTranslation();
-	const { customers, removeProject, setProjectSchemasAndLocales } = useCaaSConfigStore();
-	const [selectedProjectKeys, setSelectedProjectKeys] = useState<Set<string>>(new Set());
-	const [projectPendingDeletion, setProjectPendingDeletion] = useState<ProjectRow | null>(null);
+	const { customers, removeProject, setProjectSchemasAndLocales } =
+		useCaaSConfigStore();
+	const [selectedProjectKeys, setSelectedProjectKeys] = useState<Set<string>>(
+		new Set(),
+	);
+	const [projectPendingDeletion, setProjectPendingDeletion] =
+		useState<ProjectRow | null>(null);
 	const [isBulkDeleteAlertOpen, setIsBulkDeleteAlertOpen] = useState(false);
 	const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-	const [updatingProjectKey, setUpdatingProjectKey] = useState<string | null>(null);
+	const [updatingProjectKey, setUpdatingProjectKey] = useState<string | null>(
+		null,
+	);
 
 	const projects = useMemo(
 		() =>
@@ -81,7 +94,11 @@ function ManageProjectsDialog({
 		() =>
 			sortedProjects.filter((project) =>
 				selectedProjectKeys.has(
-					getProjectKey(project.customerName, project.stage, project.projectName),
+					getProjectKey(
+						project.customerName,
+						project.stage,
+						project.projectName,
+					),
 				),
 			),
 		[sortedProjects, selectedProjectKeys],
@@ -98,10 +115,15 @@ function ManageProjectsDialog({
 	const isAllProjectsSelected =
 		allProjectKeys.length > 0 &&
 		allProjectKeys.every((key) => selectedProjectKeys.has(key));
-	const isSomeProjectsSelected = !isAllProjectsSelected && selectedProjectKeys.size > 0;
+	const isSomeProjectsSelected =
+		!isAllProjectsSelected && selectedProjectKeys.size > 0;
 
 	const toggleProjectSelection = (project: ProjectRow, checked: boolean) => {
-		const key = getProjectKey(project.customerName, project.stage, project.projectName);
+		const key = getProjectKey(
+			project.customerName,
+			project.stage,
+			project.projectName,
+		);
 		setSelectedProjectKeys((previous) => {
 			const next = new Set(previous);
 			if (checked) {
@@ -142,7 +164,11 @@ function ManageProjectsDialog({
 	};
 
 	const updateProjectMetadata = async (project: ProjectRow) => {
-		const key = getProjectKey(project.customerName, project.stage, project.projectName);
+		const key = getProjectKey(
+			project.customerName,
+			project.stage,
+			project.projectName,
+		);
 		setUpdatingProjectKey(key);
 		try {
 			const { databaseSchemas, locales } = await discoverSchemasAndLocales({
@@ -189,17 +215,19 @@ function ManageProjectsDialog({
 			<DialogContent className="sm:max-w-4xl w-[95vw]">
 				<DialogHeader>
 					<DialogTitle>{t("app.settings.manageProjects.title")}</DialogTitle>
+					<DialogDescription>
+						{t("app.settings.manageProjects.subtitle")}
+					</DialogDescription>
 				</DialogHeader>
-				<Description className="text-sm mt-0">
-					{t("app.settings.manageProjects.subtitle")}
-				</Description>
 				<div className="flex items-center justify-end">
-					<Button asChild>
-						<a href="/setup" onClick={onAddNewProjectClick}>
-							<Icon icon="plus" className="size-4" />
-							{t("app.settings.dialog.addProject")}
-						</a>
-					</Button>
+					<Link
+						to="/setup"
+						onClick={onAddNewProjectClick}
+						className={cn(buttonVariants())}
+					>
+						<Icon icon="plus" className="size-4" data-icon="inline-start" />
+						{t("app.settings.dialog.addProject")}
+					</Link>
 				</div>
 				<ProjectsTable
 					projects={sortedProjects}
@@ -214,21 +242,23 @@ function ManageProjectsDialog({
 				/>
 				<div className="flex items-center justify-start">
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								type="button"
-								variant="outline"
-								disabled={selectedProjects.length === 0}
-							>
-								{t("app.settings.manageProjects.actions")}
-							</Button>
+						<DropdownMenuTrigger
+							render={
+								<Button
+									type="button"
+									variant="outline"
+									disabled={selectedProjects.length === 0}
+								/>
+							}
+						>
+							{t("app.settings.manageProjects.actions")}
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="start">
 							<DropdownMenuItem onClick={() => setIsExportDialogOpen(true)}>
 								{t("app.settings.manageProjects.exportSelected")}
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								className="text-destructive focus:text-destructive"
+								variant="destructive"
 								onClick={() => setIsBulkDeleteAlertOpen(true)}
 							>
 								{t("app.settings.manageProjects.deleteSelected")}

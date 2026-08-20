@@ -59,6 +59,16 @@ function CustomerNameField({
 				{hasCustomerOptions && (
 					<Select
 						value={selectValue}
+						items={[
+							...customers.map((name) => ({
+								value: name,
+								label: name,
+							})),
+							{
+								value: ADD_NEW_CUSTOMER_VALUE,
+								label: t("setup.wizardSetup.step1.form.customerName.addNew"),
+							},
+						]}
 						onValueChange={onSelectChange}
 						disabled={isFormLocked}
 					>

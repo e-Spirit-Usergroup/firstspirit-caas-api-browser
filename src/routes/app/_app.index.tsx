@@ -14,6 +14,7 @@ import {
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { Spinner } from "@/components/ui/spinner";
 import { UrlDisplay } from "@/components/url-display";
 import { buildCaaSRequest } from "@/lib/caas-request";
 import { cn } from "@/lib/tw-utils";
@@ -51,6 +52,7 @@ function RouteComponent() {
 	});
 	const currentPageRef = useRef(1);
 	const hasExecutedRequestRef = useRef(false);
+	const [isExecuting, setIsExecuting] = useState(false);
 
 	const { register, handleSubmit, setValue, watch } = useForm<AppFormData>();
 	const { locale, setLocale, mode, np, rep, count } = useSettingsStore();
@@ -100,6 +102,7 @@ function RouteComponent() {
 			return;
 		}
 		hasExecutedRequestRef.current = true;
+		setIsExecuting(true);
 
 		const { url, effectivePage } = buildCaaSRequest(
 			projectSettings.caasUrl,
@@ -136,6 +139,8 @@ function RouteComponent() {
 			setResponseData(resData);
 		} catch {
 			toast.error(t("app.form.error.networkError"));
+		} finally {
+			setIsExecuting(false);
 		}
 	}
 
@@ -226,9 +231,22 @@ function RouteComponent() {
 						<Button
 							type="submit"
 							variant="default"
-							className="px-6! flex gap-2 items-center cursor-pointer relative"
+							disabled={isExecuting}
+							aria-busy={isExecuting}
+							className="inline-flex gap-2.5 items-center cursor-pointer relative"
 						>
-							<Icon icon="running-man" className="size-4" />
+							{isExecuting ? (
+								<Spinner
+									data-icon="inline-start"
+									aria-label={t("app.common.loading")}
+								/>
+							) : (
+								<Icon
+									icon="running-man"
+									className="size-4"
+									data-icon="inline-start"
+								/>
+							)}
 							<span>{t("app.settings.executeRequest")}</span>
 						</Button>
 					</div>

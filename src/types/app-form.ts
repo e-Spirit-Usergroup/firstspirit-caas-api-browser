@@ -2,7 +2,7 @@ import type { FilterType, NameOrIdentifier } from "@/types/form";
 
 export type AppFormData = {
 	filterType?: FilterType | "none";
-	useNameOrIdentifier: NameOrIdentifier;
+	useNameOrIdentifier?: NameOrIdentifier | "none";
 	name?: string;
 	identifier?: string;
 	route?: string;
