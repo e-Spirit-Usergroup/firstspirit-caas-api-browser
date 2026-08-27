@@ -10,11 +10,36 @@
 			"description": "Step-by-step in a guided form",
 			"step1": {
 				"form": {
-					"projectName": {
-						"label": "Project Name",
-						"placeholder": "Project Name",
+					"magicPaste": {
+						"label": "Magic Paste",
+						"tooltip": "Paste a full CaaS URL and watch the magic happen.",
+						"success": "Filled customer, stage, and CaaS URL from the clipboard.",
+						"invalidUrl": "The clipboard does not contain a valid CaaS URL.",
+						"clipboardError": "Could not read the clipboard."
+					},
+					"customerName": {
+						"label": "Customer",
+						"placeholder": "Customer name",
+						"existingPlaceholder": "Select an existing customer",
+						"addNew": "Add new customer",
 						"validation": {
 							"required": "This field is required"
+						}
+					},
+					"stage": {
+						"label": "Stage",
+						"options": {
+							"dev": "Dev",
+							"qa": "QA",
+							"prod": "Prod"
+						}
+					},
+					"projectName": {
+						"label": "Project name",
+						"placeholder": "Project name",
+						"validation": {
+							"required": "This field is required",
+							"duplicate": "This project already exists for the selected customer and stage"
 						}
 					},
 					"caasApiKey": {
@@ -26,13 +51,19 @@
 					},
 					"caasUrl": {
 						"label": "CaaS URL",
-						"placeholder": "CaaS URL",
+						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "This field is required"
 						}
 					},
 					"submitBtn": "Submit",
 					"nextStep": "Next Step",
+					"discovery": {
+						"inProgress": "Discovering schemas and locales...",
+						"success": "Updated metadata: {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales",
+						"noLocales": "No locales were discovered. Setup cannot continue without locales.",
+						"error": "Could not discover schemas and locales. Please check your CaaS access."
+					},
 					"connectionStatus": {
 						"label": "Connection Status",
 						"connected": "Connected",
@@ -49,50 +80,6 @@
 						}
 					}
 				}
-			},
-			"step2": {
-				"form": {
-					"title": "Schemas & Entity Types",
-					"submitBtn": "Save",
-					"nextStep": "Next Step",
-					"configurationMode": {
-						"automaticBtn": "Automatically discover schemas and entity types",
-						"label": "Configuration Mode",
-						"tooltip": "Configuration can be done automatically or manually. Automatic mode will send requests to the CaaS and retrieve entityTypes. With every successful request all discovered entity types will be excluede from the next request until no data is returned from the CaaS.",
-						"options": {
-							"manual": "Manual",
-							"automatic": "Automatic"
-						},
-						"resolvingSchemas": "Resolving schemas...",
-						"manual": {
-							"addNewSchema": "Add new schema",
-							"addSchemaBtn": "Add schema",
-							"schemaNamePlaceholder": "Schema name",
-							"addEntityTypeBtn": "Add"
-						},
-						"toast": {
-							"schemasFound": "Found {{schemas}} schemas with a total of {{entityTypes}} entity types",
-							"schemasSaved": "Schemas saved",
-							"error": "Error resolving schemas: {{error}}"
-						}
-					}
-				}
-			},
-			"step3": {
-				"form": {
-					"title": "Add locale",
-					"locale": {
-						"placeholder": "Locale (e.g. en_US)",
-						"add": "Add",
-						"invalidFormat": "Invalid locale format. Expected format: xx_YY",
-						"toast": {
-							"localesSaved": "Locales saved",
-							"alreadyExists": "Locale already exists"
-						}
-					},
-					"submitBtn": "Save",
-					"nextStep": "Start browsing"
-				}
 			}
 		},
 		"fileUpload": {
@@ -102,14 +89,29 @@
 				"selectDifferentFile": "Click to select a different file"
 			},
 			"dropYourConfigFile": "Drop your configuration file here",
+			"invalidFileType": "Please select a JSON file",
+			"invalidJsonFile": "Invalid JSON file. Please check the file format.",
+			"fileReadError": "Error reading the file. Please try again.",
+			"noDuplicateProjects": "No new projects imported. All imported CaaS URLs already exist.",
+			"importedWithDuplicates": "Imported {{importedCount}} project(s). Skipped {{duplicateCount}} duplicate(s).",
 			"submitBtn": "Use Configuration",
 			"toast": {
-				"configLoadedSuccessfully": "Configuration loaded successfully"
+				"configLoadedSuccessfully": "Configuration loaded successfully",
+				"invalidDecryptionPassword": "Invalid password. Could not decrypt encrypted API keys."
+			},
+			"decryptDialog": {
+				"title": "Decrypt imported API keys",
+				"description": "This file contains encrypted CaaS API keys. Enter the password used during export.",
+				"passwordPlaceholder": "Enter decryption password",
+				"cancel": "Cancel",
+				"confirm": "Decrypt and import"
 			}
 		}
 	},
 	"app": {
 		"form": {
+			"customer": "Customer",
+			"stage": "Stage",
 			"project": "Project",
 			"decodedUrl": "Decoded URL",
 			"noUrlToDisplay": "No URL to display",
@@ -118,17 +120,32 @@
 				"success": "URL copied to clipboard",
 				"error": "No URL to copy"
 			},
+			"copyJsonToClipboardBtn": {
+				"label": "Copy JSON to Clipboard",
+				"success": "JSON copied to clipboard",
+				"error": "No JSON to copy"
+			},
 			"filterDropdown": {
 				"noFilter": "No Filter",
-				"selectFilterType": "Select a Filter Type"
+				"selectFilterType": "Select a Filter Type",
+				"placeholder": "Type"
 			},
 			"filterParameterDropdown": {
-				"noFilter": "Select",
-				"selectFilterParameter": "Select a Filter Parameter"
+				"noFilter": "No Filter Parameter",
+				"selectFilterParameter": "Select a Filter Parameter",
+				"label": "Filter Parameter",
+				"placeholder": "Select",
+				"identifierPlaceholder": "Identifier",
+				"namePlaceholder": "Name",
+				"routePlaceholder": "Route"
 			},
 			"entityTypeDropdown": {
 				"noSchemaFilter": "No Schema Filter",
-				"noEntityTypeFilter": "No Entity Type Filter"
+				"noEntityTypeFilter": "No Entity Type Filter",
+				"schemaLabel": "Schema",
+				"entityTypeLabel": "Entity Type",
+				"schemaPlaceholder": "Select schema",
+				"entityTypePlaceholder": "Select entity type"
 			},
 			"error": {
 				"missingUrl": "CaaS URL is not configured",
@@ -148,6 +165,13 @@
 				"locale": {
 					"label": "Locale"
 				},
+				"mode": {
+					"label": "Mode",
+					"options": {
+						"preview": "Preview",
+						"release": "Release"
+					}
+				},
 				"queryParams": {
 					"label": "Query Parameter",
 					"np": {
@@ -163,10 +187,60 @@
 						"tooltip": "Adds metadata to the response containing information about the number of elements and pages. Needed for pagination to work correctly, but slows down the request."
 					}
 				},
-				"switchProject": "Switch Project",
-				"downloadConfig": "Download Config"
+				"update": {
+					"label": "Updates",
+					"checkButton": "Check for updates",
+					"checking": "Checking for updates...",
+					"currentVersion": "Current version: {{version}}",
+					"upToDate": "You are up to date (current: {{currentVersion}}, latest: {{latestVersion}}).",
+					"updateAvailable": "A newer version is available (current: {{currentVersion}}, latest: {{latestVersion}}).",
+					"viewRelease": "View release",
+					"checkFailed": "Unable to check for updates right now."
+				},
+				"addProject": "Add Project",
+				"downloadConfig": "Download Config",
+				"manageProjects": "Manage Projects",
+				"cancel": "Cancel",
+				"save": "Save"
+			},
+			"selectAllProjects": "Select all projects",
+			"manageProjects": {
+				"title": "Manage Projects",
+				"subtitle": "Review and maintain configured projects.",
+				"actions": "Actions",
+				"updateProject": "Update schemas and locales",
+				"updatingProject": "Updating schemas and locales...",
+				"updateSuccess": "Updated '{{projectName}}': {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales",
+				"updateFailed": "Failed to update schemas and locales for this project.",
+				"noLocalesDiscovered": "No locales were discovered for this project.",
+				"removeProject": "Remove project",
+				"deleteSelected": "Delete selected",
+				"exportSelected": "Export selected",
+				"exportEncryptionTitle": "Encrypt API keys before export",
+				"exportEncryptionDescription": "Enter a password to encrypt all CaaS API keys in this export file.",
+				"exportPasswordPlaceholder": "Enter encryption password",
+				"exportConfirm": "Encrypt and export",
+				"exportEncryptionFailed": "Could not encrypt selected projects. Please try again.",
+				"selectProject": "Select project {{projectName}}",
+				"confirm": "Confirm",
+				"cancel": "Cancel",
+				"addNewProject": "Add new project",
+				"emptyState": "No projects configured yet.",
+				"confirmRemove": "Remove project '{{projectName}}' from {{customerName}} ({{stage}})?",
+				"confirmRemoveSelected": "Remove {{count}} selected project(s)?"
 			},
 			"executeRequest": "Execute"
+		},
+		"json": {
+			"noResponse": "Execute a Query to get a response",
+			"codeSampleAlt": "Code sample illustration",
+			"executeRequest": "Execute"
+		},
+		"common": {
+			"close": "Close",
+			"loading": "Loading",
+			"uploadConfigAlt": "Upload configuration file illustration",
+			"wizardSetupAlt": "Wizard setup illustration"
 		}
 	}
 }

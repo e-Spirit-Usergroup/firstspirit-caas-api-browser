@@ -1,55 +1,32 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Navbar } from "@/components/app-navbar";
-import { Footer } from "@/components/footer";
+import { FilterSection } from "@/components/filter-section";
 import Icon from "@/components/icons/icon";
+import { PaginationControls } from "@/components/pagination-controls";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import JSONViewer from "@/components/ui/json-viewer";
-import { Label } from "@/components/ui/label";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectSeparator,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+	ResizableHandle,
+	ResizablePanel,
+	ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { Spinner } from "@/components/ui/spinner";
+import { UrlDisplay } from "@/components/url-display";
+import { buildCaaSRequest } from "@/lib/caas-request";
+import { cn } from "@/lib/tw-utils";
 import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
+	getActiveProjectFromState,
 	isCaaSConfigStoreInitialized,
 	useCaaSConfigStore,
 } from "@/stores/caas-config-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import {
-	type FilterType,
-	filterTypeOptionColors,
-	filterTypeOptionTexts,
-	type NameOrIdentifier,
-	nameOrIdentifierOptionTexts,
-} from "@/types/form";
+import type { AppFormData } from "@/types/app-form";
 import type { PageInfos } from "@/types/page-infos";
-
-type FormData = {
-	filterType?: FilterType | "none";
-	useNameOrIdentifier: NameOrIdentifier;
-	name?: string;
-	identifier?: string;
-	route?: string;
-	schema?: string;
-	entityType?: string;
-	np?: boolean;
-	rep?: boolean;
-	count?: boolean;
-};
+import { stageColors, stageOptionTexts } from "@/types/stage";
 
 export const Route = createFileRoute("/app/_app/")({
 	component: RouteComponent,
@@ -57,21 +34,29 @@ export const Route = createFileRoute("/app/_app/")({
 
 function RouteComponent() {
 	const { t } = useTranslation();
-	const selectNameOrIdentifierId = useId();
 	const filterSelectId = useId();
+	const selectNameOrIdentifierId = useId();
 
-	const { databaseSchemas, projectSetupData: projectSettings } =
-		useCaaSConfigStore();
-	const [responseData, setResponseData] = useState(null);
-	const [currentUrl, setCurrentUrl] = useState<string>("");
-	const { register, handleSubmit, setValue, watch } = useForm<FormData>();
-	const { locale, np, rep, count } = useSettingsStore();
-	const navigate = useNavigate();
+	const { customers, activeSelection } = useCaaSConfigStore();
+	const projectSettings = useMemo(
+		() => getActiveProjectFromState({ customers, activeSelection }),
+		[customers, activeSelection],
+	);
+	const databaseSchemas = projectSettings?.databaseSchemas;
 
+	const [responseData, setResponseData] = useState<any | null>(null);
+	const [currentUrl, setCurrentUrl] = useState("");
 	const [pageInfos, setPageInfos] = useState<PageInfos>({
 		totalPages: 0,
 		currentPage: 1,
 	});
+	const currentPageRef = useRef(1);
+	const hasExecutedRequestRef = useRef(false);
+	const [isExecuting, setIsExecuting] = useState(false);
+
+	const { register, handleSubmit, setValue, watch } = useForm<AppFormData>();
+	const { locale, setLocale, mode, np, rep, count } = useSettingsStore();
+	const navigate = useNavigate();
 
 	const filterType = watch("filterType");
 	const schema = watch("schema");
@@ -84,400 +69,229 @@ function RouteComponent() {
 			: navigate({ to: "/setup" });
 	}, [navigate]);
 
-	async function onSubmit(data: FormData) {
-		//@ts-expect-error - we check this before allowing to proceed to this step
-		const url = new URL(projectSettings.caasUrl);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: We need the customer props as trigger
+	useEffect(() => {
+		setCurrentUrl("");
+		setResponseData(null);
+		hasExecutedRequestRef.current = false;
+		currentPageRef.current = 1;
+		setPageInfos({ totalPages: 0, currentPage: 1 });
+	}, [
+		activeSelection?.customerName,
+		activeSelection?.stage,
+		activeSelection?.projectName,
+	]);
 
-		const searchParams = new URLSearchParams();
-
-		if (np) searchParams.append("np", "");
-		else pageInfos.currentPage = 1;
-
-		if (count) searchParams.append("count", "");
-		else pageInfos.currentPage = 1;
-
-		if (rep) {
-			searchParams.append("rep", "pj");
-			pageInfos.currentPage = 1;
+	useEffect(() => {
+		const projectLocales = projectSettings?.locales ?? [];
+		if (!projectLocales.length) return;
+		if (!locale || !projectLocales.includes(locale)) {
+			setLocale(projectLocales[0]);
 		}
+	}, [projectSettings?.locales, locale, setLocale]);
 
-		searchParams.append("page", pageInfos.currentPage.toString());
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <>
+	useEffect(() => {
+		if (!hasExecutedRequestRef.current) return;
+		handleSubmit(onSubmit)();
+	}, [mode, locale, handleSubmit]);
 
-		// Add Filter
-		let filter = {};
-
-		if (locale) {
-			const localeArray = locale.split("_");
-			filter = {
-				...filter,
-				"locale.country": localeArray[1],
-				"locale.language": localeArray[0],
-			};
+	async function onSubmit(data: AppFormData) {
+		if (!projectSettings?.caasUrl || !projectSettings?.caasApiKey) {
+			toast.error(t("app.form.error.missingUrl"));
+			return;
 		}
+		hasExecutedRequestRef.current = true;
+		setIsExecuting(true);
 
-		if (data.filterType && data.filterType !== "none") {
-			filter = {
-				...filter,
-				fsType: data.filterType,
-			};
+		const { url, effectivePage } = buildCaaSRequest(
+			projectSettings.caasUrl,
+			mode,
+			currentPageRef.current,
+			locale,
+			data,
+			{ np, rep, count },
+		);
+		currentPageRef.current = effectivePage;
+		setCurrentUrl(url);
 
-			if (data.schema && data.schema !== "none") {
-				filter = {
-					...filter,
-					schema: data.schema,
-				};
+		try {
+			const response = await fetch(url, {
+				headers: { Authorization: `Bearer ${projectSettings.caasApiKey}` },
+			});
+
+			if (!response.ok) {
+				toast.error(
+					t("app.form.error.requestFailed", {
+						status: response.status,
+						statusText: response.statusText,
+					}),
+				);
+				return;
 			}
 
-			if (data.entityType && data.entityType !== "none") {
-				filter = {
-					...filter,
-					entityType: data.entityType,
-				};
-			}
+			const resData = await response.json();
 
-			if (data.name && data.name !== "") {
-				filter = {
-					...filter,
-					name: data.name,
-				};
-			}
-
-			if (data.identifier && data.identifier !== "") {
-				filter = {
-					...filter,
-					identifier: data.identifier,
-				};
-			}
-
-			if (data.route && data.route !== "") {
-				filter = {
-					...filter,
-					route: data.route,
-				};
-			}
+			setPageInfos({
+				totalPages: resData._total_pages,
+				currentPage: effectivePage,
+			});
+			setResponseData(resData);
+		} catch {
+			toast.error(t("app.form.error.networkError"));
+		} finally {
+			setIsExecuting(false);
 		}
-
-		searchParams.append("filter", JSON.stringify(filter));
-
-		url.search = searchParams.toString();
-		setCurrentUrl(url.toString());
-
-		const response = await fetch(url.toString(), {
-			headers: {
-				Authorization: `Bearer ${projectSettings.caasApiKey}`,
-			},
-		});
-		const resData = await response.json();
-
-		setPageInfos((prev) => ({
-			...prev,
-			totalPages: resData._total_pages,
-		}));
-
-		setResponseData(resData);
 	}
 
-	function pagination(direction: "next" | "previous") {
-		if (direction === "next") {
-			if (pageInfos.currentPage < pageInfos.totalPages) {
-				pageInfos.currentPage++;
-				console.log("currentPage", pageInfos.currentPage);
-				handleSubmit(onSubmit)();
-			}
-		} else if (direction === "previous") {
-			if (pageInfos.currentPage > 1) {
-				pageInfos.currentPage--;
-				console.log("currentPage", pageInfos.currentPage);
-				handleSubmit(onSubmit)();
-			}
+	function paginate(direction: "next" | "previous") {
+		if (direction === "next" && pageInfos.currentPage < pageInfos.totalPages) {
+			currentPageRef.current = pageInfos.currentPage + 1;
+			setPageInfos((prev) => ({
+				...prev,
+				currentPage: currentPageRef.current,
+			}));
+			handleSubmit(onSubmit)();
+		} else if (direction === "previous" && pageInfos.currentPage > 1) {
+			currentPageRef.current = pageInfos.currentPage - 1;
+			setPageInfos((prev) => ({
+				...prev,
+				currentPage: currentPageRef.current,
+			}));
+			handleSubmit(onSubmit)();
 		}
 	}
 
 	async function onCopyUrl() {
-		if (currentUrl) {
+		if (!currentUrl) {
+			toast.error(t("app.form.copyUrlToClipboardBtn.error"));
+			return;
+		}
+		try {
 			await navigator.clipboard.writeText(currentUrl);
 			toast.success(t("app.form.copyUrlToClipboardBtn.success"));
-		} else toast.error(t("app.form.copyUrlToClipboardBtn.error"));
+		} catch {
+			toast.error(t("app.form.copyUrlToClipboardBtn.error"));
+		}
 	}
 
-	return (
-		<div className="mx-auto flex h-full w-full flex-col lg:flex-row">
-			{/* Left Side - Form*/}
-			<div className="lg:flex-1 lg:h-screen p-4 overflow-y-scroll no-scrollbar">
-				<Navbar className="mb-4" />
-				<form
-					onSubmit={handleSubmit(onSubmit)}
-					className="grid grid-cols-12 gap-4 mb-4 flex-1"
-				>
-					<div className="col-span-12 bg-blue-100 dark:bg-neutral-800 p-4 rounded-lg text-blue-950 dark:text-blue-100">
-						<span className="inline-flex items-center gap-1">
-							<span className="font-semibold">{t("app.form.decodedUrl")}</span>
-							<TooltipProvider>
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<button
-											type="button"
-											onClick={onCopyUrl}
-											className="px-2.5 cursor-pointer"
-											aria-label={t("app.form.copyUrlToClipboardBtn.label")}
-										>
-											<Icon icon="clipboard" className="size-4" />
-										</button>
-									</TooltipTrigger>
-									<TooltipContent className="max-w-64">
-										<p>{t("app.form.copyUrlToClipboardBtn.label")}</p>
-									</TooltipContent>
-								</Tooltip>
-							</TooltipProvider>
-						</span>
-						<span className="mt-2 block bg-neutral-300 text-neutral-700 dark:bg-neutral-900 dark:text-blue-400 p-1.5 text-sm font-mono break-all">
-							{currentUrl
-								? decodeURIComponent(currentUrl)
-								: t("app.form.noUrlToDisplay")}
-						</span>
-					</div>
-					<div className="col-span-12 flex flex-row gap-4">
-						<Select
-							onValueChange={(value: FilterType) => {
-								setValue("filterType", value);
-								setValue("name", undefined);
-								setValue("schema", undefined);
-								setValue("entityType", undefined);
-								setValue("identifier", undefined);
-								setValue("route", undefined);
-							}}
-							value={filterType ?? "none"}
-						>
-							<SelectTrigger className="flex-initial w-46" id={filterSelectId}>
-								<SelectValue placeholder="Type" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem key={0} value="none">
-									<span className="inline-flex items-center gap-2">
-										<span
-											className="inline-block size-3 rounded-full"
-											style={{
-												backgroundColor: "rgba(0,0,0,0)",
-											}}
-										/>
-										{t("app.form.filterDropdown.noFilter")}
-									</span>
-								</SelectItem>
-								<SelectSeparator />
-								{(Object.keys(filterTypeOptionTexts) as FilterType[]).map(
-									(type) => (
-										<SelectItem key={type} value={type}>
-											<span className="inline-flex items-center gap-2">
-												<span
-													className="inline-block size-3 rounded-full"
-													style={{
-														backgroundColor: filterTypeOptionColors[type],
-													}}
-												/>
-												{filterTypeOptionTexts[type]}
-											</span>
-										</SelectItem>
-									),
-								)}
-							</SelectContent>
-						</Select>
-						<Label htmlFor={filterSelectId}>
-							{t("app.form.filterDropdown.selectFilterType")}
-						</Label>
-					</div>
+	async function onCopyJson() {
+		if (!responseData) {
+			toast.error(t("app.form.copyJsonToClipboardBtn.error"));
+			return;
+		}
+		try {
+			await navigator.clipboard.writeText(
+				JSON.stringify(responseData, null, 2),
+			);
+			toast.success(t("app.form.copyJsonToClipboardBtn.success"));
+		} catch {
+			toast.error(t("app.form.copyJsonToClipboardBtn.error"));
+		}
+	}
 
-					{filterType &&
-						filterType !== "none" &&
-						filterType !== "Dataset" &&
-						filterType !== "ProjectProperties" && (
-							<div className="col-span-12 flex gap-4">
-								<Select
-									onValueChange={(value: NameOrIdentifier) => {
-										setValue("useNameOrIdentifier", value);
-										setValue("name", undefined);
-										setValue("identifier", undefined);
-										setValue("route", undefined);
-									}}
-									value={useNameOrIdentifier}
-								>
-									<SelectTrigger
-										className="flex-initial w-42 gap-2"
-										id={selectNameOrIdentifierId}
-									>
-										<SelectValue placeholder="Select" />
-									</SelectTrigger>
-									<SelectContent>
-										{(
-											Object.keys(
-												nameOrIdentifierOptionTexts,
-											) as NameOrIdentifier[]
-										)
-											.filter((type) => {
-												if (
-													filterType === "PageRef"
-													//||filterType === "Page"
-												)
-													return true;
-												return type !== "route";
-											})
-											.map((type) => (
-												<SelectItem key={type} value={type}>
-													<span className="inline-flex items-center gap-2">
-														<span className="inline-block size-3 rounded-full" />
-														{nameOrIdentifierOptionTexts[type]}
-													</span>
-												</SelectItem>
-											))}
-									</SelectContent>
-								</Select>
-
-								{useNameOrIdentifier === "identifier" ? (
-									<Input
-										type="text"
-										placeholder="Identifier"
-										{...register("identifier")}
-									/>
-								) : useNameOrIdentifier === "name" ? (
-									<Input type="text" placeholder="Name" {...register("name")} />
-								) : useNameOrIdentifier === "route" ? (
-									<Input
-										type="text"
-										placeholder="Route"
-										{...register("route")}
-									/>
-								) : (
-									<Label htmlFor={selectNameOrIdentifierId}>
-										{t(
-											"app.form.filterParameterDropdown.selectFilterParameter",
-										)}
-									</Label>
-								)}
-							</div>
-						)}
-
-					{filterType === "Dataset" && databaseSchemas?.length ? (
-						<>
-							<div className="col-span-6">
-								<Select
-									onValueChange={(value) => {
-										setValue("schema", value);
-										setValue("entityType", undefined);
-									}}
-									value={schema ?? "none"}
-								>
-									<SelectTrigger className="flex-initial">
-										<SelectValue placeholder="Select schema" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem key={0} value="none">
-											<span className="inline-flex items-center gap-2">
-												{t("app.form.entityTypeDropdown.noSchemaFilter")}
-											</span>
-										</SelectItem>
-										<SelectSeparator />
-										{databaseSchemas.map((schema) => (
-											<SelectItem key={schema.name} value={schema.name}>
-												<span className="inline-flex items-center gap-2">
-													{schema.name}
-												</span>
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-
-							<div className="col-span-6">
-								<Select
-									onValueChange={(value) => setValue("entityType", value)}
-									value={entityType ?? "none"}
-									disabled={!schema || schema === "none"}
-								>
-									<SelectTrigger className="flex-initial">
-										<SelectValue placeholder="Select entity type" />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem key={0} value="none">
-											<span className="inline-flex items-center gap-2">
-												{t("app.form.entityTypeDropdown.noEntityTypeFilter")}
-											</span>
-										</SelectItem>
-										{databaseSchemas?.filter(
-											(schema) => schema.name === watch("schema"),
-										)[0]?.entityTypeNames?.length && <SelectSeparator />}
-										{databaseSchemas
-											.filter((schema) => schema.name === watch("schema")) // Filter by selected schema
-											.flatMap((schema) =>
-												schema.entityTypeNames?.map((entityType) => (
-													<SelectItem
-														key={"${schema.name}-${entityType}"}
-														value={entityType}
-													>
-														<span className="inline-flex items-center gap-2">
-															{entityType}
-														</span>
-													</SelectItem>
-												)),
-											)}
-									</SelectContent>
-								</Select>
-							</div>
-						</>
-					) : null}
-					<div className="col-span-12"></div>
-					<div className="col-span-12">
-						<div className="group/button relative inline-block">
-							<span className="absolute inset-1 group-hover/button:inset-0 rounded-lg bg-linear-to-r from-pink-500 via-fuchsia-600 opacity-75 group-hover/button:opacity-100 to-purple-500 blur-sm transition-all"></span>
-							<Button
-								type="submit"
-								variant="default"
-								className="px-6! flex gap-2 items-center cursor-pointer relative"
-							>
-								<Icon icon="running-man" className="size-4" />
-								<span>{t("app.settings.executeRequest")}</span>
-							</Button>
-						</div>
-					</div>
-				</form>
-			</div>
-
-			{/* Right Side - Visualized response */}
-			<div className="flex flex-col flex-1 h-svh p-2 overflow-hidden">
-				<JSONViewer
-					json={responseData}
-					className="h-full overflow-y-scroll no-scrollbar"
-				/>
-
-				{pageInfos?.totalPages > 1 && (
-					<div className="flex w-full items-center justify-between mt-2">
-						<Button
-							variant="ghost"
-							size="default"
-							className="text-primary"
-							onClick={() => pagination("previous")}
-							disabled={pageInfos.currentPage <= 1}
-						>
-							<Icon icon="caret-left" className="size-4" />
-							{t("app.pagination.previous")}
-						</Button>
-						<span className="text-sm">
-							{t("app.pagination.pageXOfY", {
-								x: pageInfos.currentPage,
-								y: pageInfos.totalPages,
-							})}
-						</span>
-						<Button
-							variant="ghost"
-							size="default"
-							className="text-primary"
-							onClick={() => pagination("next")}
-							disabled={pageInfos.currentPage >= pageInfos.totalPages}
-						>
-							{t("app.pagination.next")}
-							<Icon icon="caret-right" className="size-4" />
-						</Button>
-					</div>
+	const formPanel = (
+		<div className="h-full p-4 overflow-y-scroll no-scrollbar items-center">
+			<Navbar />
+			<span
+				className={cn(
+					"inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium inset-ring mb-4",
+					activeSelection?.stage && stageColors[activeSelection.stage],
 				)}
-			</div>
+			>
+				<span>
+					{activeSelection?.customerName}{" "}
+					{activeSelection?.stage &&
+						`${stageOptionTexts[activeSelection.stage]} `}
+					| {activeSelection?.projectName}
+				</span>
+				<span className="rounded-sm bg-gray-700 px-1 py-0.5 text-xs text-gray-100">
+					{mode?.toUpperCase()}
+				</span>
+			</span>
+			<form
+				onSubmit={handleSubmit(onSubmit)}
+				className="grid grid-cols-12 gap-4 mb-4 flex-1"
+			>
+				<UrlDisplay url={currentUrl} onCopy={onCopyUrl} />
+				<FilterSection
+					filterType={filterType}
+					useNameOrIdentifier={useNameOrIdentifier}
+					schema={schema}
+					entityType={entityType}
+					databaseSchemas={databaseSchemas}
+					filterSelectId={filterSelectId}
+					selectNameOrIdentifierId={selectNameOrIdentifierId}
+					setValue={setValue}
+					register={register}
+				/>
+				<div className="col-span-12">
+					<div className="group/button relative inline-block">
+						<span className="absolute inset-1 group-hover/button:inset-0 rounded-md bg-linear-to-r from-pink-500 via-fuchsia-600 opacity-75 group-hover/button:opacity-100 to-purple-500 blur-sm transition-all" />
+						<Button
+							type="submit"
+							variant="default"
+							disabled={isExecuting}
+							aria-busy={isExecuting}
+							className="inline-flex gap-2.5 items-center cursor-pointer relative"
+						>
+							{isExecuting ? (
+								<Spinner
+									data-icon="inline-start"
+									aria-label={t("app.common.loading")}
+								/>
+							) : (
+								<Icon
+									icon="running-man"
+									className="size-4"
+									data-icon="inline-start"
+								/>
+							)}
+							<span>{t("app.settings.executeRequest")}</span>
+						</Button>
+					</div>
+				</div>
+			</form>
 		</div>
+	);
+
+	const responsePanel = (
+		<div className="flex flex-col h-full p-2 overflow-hidden">
+			<JSONViewer
+				json={responseData}
+				className="h-full overflow-y-scroll no-scrollbar"
+				onCopy={onCopyJson}
+			/>
+			{pageInfos.totalPages > 1 && (
+				<PaginationControls
+					pageInfos={pageInfos}
+					onPrevious={() => paginate("previous")}
+					onNext={() => paginate("next")}
+				/>
+			)}
+		</div>
+	);
+
+	return (
+		<>
+			{/* Mobile: stacked layout */}
+			<div className="flex h-full w-full flex-col lg:hidden">
+				{formPanel}
+				{responsePanel}
+			</div>
+
+			{/* Desktop: resizable panels */}
+			<div className="hidden h-svh w-full lg:block">
+				<ResizablePanelGroup orientation="horizontal">
+					<ResizablePanel defaultSize="40%" minSize="20%" maxSize="65%">
+						{formPanel}
+					</ResizablePanel>
+					<ResizableHandle withHandle />
+					<ResizablePanel defaultSize="60%" minSize="20%">
+						{responsePanel}
+					</ResizablePanel>
+				</ResizablePanelGroup>
+			</div>
+		</>
 	);
 }

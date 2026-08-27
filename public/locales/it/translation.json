@@ -10,11 +10,36 @@
 			"description": "Procedura guidata passo dopo passo",
 			"step1": {
 				"form": {
-					"projectName": {
-						"label": "Nome progetto",
-						"placeholder": "Nome progetto",
+					"magicPaste": {
+						"label": "Magic Paste",
+						"tooltip": "Incolla l'URL CaaS completo e guarda succedere la magia.",
+						"success": "Cliente, stage e URL CaaS compilati dagli appunti.",
+						"invalidUrl": "Gli appunti non contengono un URL CaaS valido.",
+						"clipboardError": "Impossibile leggere gli appunti."
+					},
+					"customerName": {
+						"label": "Cliente",
+						"placeholder": "Nome cliente",
+						"existingPlaceholder": "Seleziona un cliente esistente",
+						"addNew": "Aggiungi nuovo cliente",
 						"validation": {
 							"required": "Questo campo è obbligatorio"
+						}
+					},
+					"stage": {
+						"label": "Stage",
+						"options": {
+							"dev": "Dev",
+							"qa": "QA",
+							"prod": "Prod"
+						}
+					},
+					"projectName": {
+						"label": "Progetto",
+						"placeholder": "Progetto",
+						"validation": {
+							"required": "Questo campo è obbligatorio",
+							"duplicate": "Questo progetto esiste gia per il cliente e lo stage selezionati"
 						}
 					},
 					"caasApiKey": {
@@ -26,13 +51,19 @@
 					},
 					"caasUrl": {
 						"label": "URL CaaS",
-						"placeholder": "URL CaaS",
+						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "Questo campo è obbligatorio"
 						}
 					},
 					"submitBtn": "Salva",
 					"nextStep": "Avanti",
+					"discovery": {
+						"inProgress": "Rilevamento di schemi e locale in corso...",
+						"success": "Metadati aggiornati: {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali",
+						"noLocales": "Nessuna locale rilevata. La configurazione non puo continuare senza locali.",
+						"error": "Impossibile rilevare schemi e locali. Controlla l'accesso a CaaS."
+					},
 					"connectionStatus": {
 						"label": "Stato connessione",
 						"connected": "Connesso",
@@ -49,50 +80,6 @@
 						}
 					}
 				}
-			},
-			"step2": {
-				"form": {
-					"title": "Schemi e tipi di entità",
-					"submitBtn": "Salva",
-					"nextStep": "Avanti",
-					"configurationMode": {
-						"automaticBtn": "Rileva automaticamente schemi e tipi di entità",
-						"label": "Modalità di configurazione",
-						"tooltip": "La configurazione può essere eseguita automaticamente o manualmente. In modalità automatica verranno inviate richieste al CaaS per recuperare gli entityTypes. A ogni richiesta andata a buon fine tutti i tipi di entità individuati verranno esclusi dalla richiesta successiva finché il CaaS non restituirà più dati.",
-						"options": {
-							"manual": "Manuale",
-							"automatic": "Automatico"
-						},
-						"resolvingSchemas": "Rilevamento degli schemi in corso...",
-						"manual": {
-							"addNewSchema": "Aggiungi nuovo schema",
-							"addSchemaBtn": "Aggiungi schema",
-							"schemaNamePlaceholder": "Nome schema",
-							"addEntityTypeBtn": "Aggiungi"
-						},
-						"toast": {
-							"schemasFound": "Trovati {{schemas}} schemi per un totale di {{entityTypes}} tipi di entità",
-							"schemasSaved": "Schemi salvati",
-							"error": "Errore durante il rilevamento degli schemi: {{error}}"
-						}
-					}
-				}
-			},
-			"step3": {
-				"form": {
-					"title": "Aggiungi locale",
-					"locale": {
-						"placeholder": "Locale (es. it_IT)",
-						"add": "Aggiungi",
-						"invalidFormat": "Formato locale non valido. Formato previsto: xx_YY",
-						"toast": {
-							"localesSaved": "Locali salvati",
-							"alreadyExists": "Locale già esistente"
-						}
-					},
-					"submitBtn": "Salva",
-					"nextStep": "Inizia a esplorare"
-				}
 			}
 		},
 		"fileUpload": {
@@ -102,14 +89,29 @@
 				"selectDifferentFile": "Fai clic per selezionare un altro file"
 			},
 			"dropYourConfigFile": "Rilascia qui il tuo file di configurazione",
+			"invalidFileType": "Seleziona un file JSON",
+			"invalidJsonFile": "File JSON non valido. Controlla il formato del file.",
+			"fileReadError": "Errore nella lettura del file. Riprova.",
+			"noDuplicateProjects": "Nessun nuovo progetto importato. Tutti gli URL CaaS importati esistono già.",
+			"importedWithDuplicates": "{{importedCount}} progetto(i) importato(i). {{duplicateCount}} duplicato(i) saltato(i).",
 			"submitBtn": "Usa configurazione",
 			"toast": {
-				"configLoadedSuccessfully": "Configurazione caricata con successo"
+				"configLoadedSuccessfully": "Configurazione caricata con successo",
+				"invalidDecryptionPassword": "Password non valida. Impossibile decrittare le API key cifrate."
+			},
+			"decryptDialog": {
+				"title": "Decritta le API key importate",
+				"description": "Questo file contiene API key CaaS cifrate. Inserisci la password usata durante l'esportazione.",
+				"passwordPlaceholder": "Inserisci password di decrittazione",
+				"cancel": "Annulla",
+				"confirm": "Decritta e importa"
 			}
 		}
 	},
 	"app": {
 		"form": {
+			"customer": "Cliente",
+			"stage": "Stage",
 			"project": "Progetto",
 			"decodedUrl": "URL decodificato",
 			"noUrlToDisplay": "Nessun URL da visualizzare",
@@ -118,17 +120,32 @@
 				"success": "URL copiato negli appunti",
 				"error": "Nessun URL da copiare"
 			},
+			"copyJsonToClipboardBtn": {
+				"label": "Copia JSON negli appunti",
+				"success": "JSON copiato negli appunti",
+				"error": "Nessun JSON da copiare"
+			},
 			"filterDropdown": {
 				"noFilter": "Nessun filtro",
-				"selectFilterType": "Seleziona un tipo di filtro"
+				"selectFilterType": "Seleziona un tipo di filtro",
+				"placeholder": "Tipo"
 			},
 			"filterParameterDropdown": {
-				"noFilter": "Seleziona",
-				"selectFilterParameter": "Seleziona un parametro di filtro"
+				"noFilter": "Nessun parametro di filtro",
+				"selectFilterParameter": "Seleziona un parametro di filtro",
+				"label": "Parametro di filtro",
+				"placeholder": "Seleziona",
+				"identifierPlaceholder": "Identificatore",
+				"namePlaceholder": "Nome",
+				"routePlaceholder": "Route"
 			},
 			"entityTypeDropdown": {
 				"noSchemaFilter": "Nessun filtro schema",
-				"noEntityTypeFilter": "Nessun filtro tipo di entità"
+				"noEntityTypeFilter": "Nessun filtro tipo di entità",
+				"schemaLabel": "Schema",
+				"entityTypeLabel": "Tipo di entità",
+				"schemaPlaceholder": "Seleziona schema",
+				"entityTypePlaceholder": "Seleziona tipo di entità"
 			},
 			"error": {
 				"missingUrl": "URL CaaS non configurata",
@@ -148,6 +165,13 @@
 				"locale": {
 					"label": "Locale"
 				},
+				"mode": {
+					"label": "Mode",
+					"options": {
+						"preview": "Preview",
+						"release": "Release"
+					}
+				},
 				"queryParams": {
 					"label": "Parametri di query",
 					"np": {
@@ -163,10 +187,60 @@
 						"tooltip": "Aggiunge alla risposta metadati con informazioni sul numero di elementi e di pagine. Necessario affinché la paginazione funzioni correttamente, ma rallenta la richiesta."
 					}
 				},
-				"switchProject": "Cambia progetto",
-				"downloadConfig": "Scarica configurazione"
+				"update": {
+					"label": "Aggiornamenti",
+					"checkButton": "Controlla aggiornamenti",
+					"checking": "Controllo aggiornamenti in corso...",
+					"currentVersion": "Versione corrente: {{version}}",
+					"upToDate": "L'app e aggiornata (corrente: {{currentVersion}}, ultima: {{latestVersion}}).",
+					"updateAvailable": "E disponibile una versione piu recente (corrente: {{currentVersion}}, ultima: {{latestVersion}}).",
+					"viewRelease": "Apri release",
+					"checkFailed": "Impossibile controllare gli aggiornamenti in questo momento."
+				},
+				"addProject": "Aggiungi progetto",
+				"downloadConfig": "Scarica configurazione",
+				"manageProjects": "Gestisci progetti",
+				"cancel": "Annulla",
+				"save": "Salva"
+			},
+			"selectAllProjects": "Seleziona tutti i progetti",
+			"manageProjects": {
+				"title": "Gestisci progetti",
+				"subtitle": "Controlla e gestisci i progetti configurati.",
+				"actions": "Azioni",
+				"updateProject": "Aggiorna schemi e locali",
+				"updatingProject": "Aggiornamento schemi e locali in corso...",
+				"updateSuccess": "'{{projectName}}' aggiornato: {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali",
+				"updateFailed": "Impossibile aggiornare schemi e locali per questo progetto.",
+				"noLocalesDiscovered": "Nessuna locale rilevata per questo progetto.",
+				"removeProject": "Rimuovi progetto",
+				"deleteSelected": "Rimuovi selezionati",
+				"exportSelected": "Esporta selezionati",
+				"exportEncryptionTitle": "Cifra le API key prima dell'esportazione",
+				"exportEncryptionDescription": "Inserisci una password per cifrare tutte le API key CaaS in questo file esportato.",
+				"exportPasswordPlaceholder": "Inserisci password di cifratura",
+				"exportConfirm": "Cifra ed esporta",
+				"exportEncryptionFailed": "Impossibile cifrare i progetti selezionati. Riprova.",
+				"selectProject": "Seleziona progetto {{projectName}}",
+				"confirm": "Conferma",
+				"cancel": "Annulla",
+				"addNewProject": "Aggiungi nuovo progetto",
+				"emptyState": "Nessun progetto configurato.",
+				"confirmRemove": "Rimuovere il progetto '{{projectName}}' da {{customerName}} ({{stage}})?",
+				"confirmRemoveSelected": "Rimuovere {{count}} progetto(i) selezionato(i)?"
 			},
 			"executeRequest": "Esegui"
+		},
+		"json": {
+			"noResponse": "Esegui una query per ottenere una risposta",
+			"codeSampleAlt": "Illustrazione esempio di codice",
+			"executeRequest": "Esegui"
+		},
+		"common": {
+			"close": "Chiudi",
+			"loading": "Caricamento",
+			"uploadConfigAlt": "Illustrazione caricamento file di configurazione",
+			"wizardSetupAlt": "Illustrazione configurazione guidata"
 		}
 	}
 }
