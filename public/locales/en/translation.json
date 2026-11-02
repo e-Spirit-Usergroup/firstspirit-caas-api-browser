@@ -27,12 +27,7 @@
 						}
 					},
 					"stage": {
-						"label": "Stage",
-						"options": {
-							"dev": "Dev",
-							"qa": "QA",
-							"prod": "Prod"
-						}
+						"detected": "Detected stage"
 					},
 					"projectName": {
 						"label": "Project name",
@@ -56,7 +51,8 @@
 						"label": "CaaS URL",
 						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
-							"required": "This field is required"
+							"required": "This field is required",
+							"stageNotDetected": "Could not detect the stage. The URL path must start with /CUSTOMER-STAGE/ (e.g. /example-dev/)."
 						}
 					},
 					"submitBtn": "Submit",

@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { getStageFromCaasUrl } from "@/lib/caas-url";
 import type { ProjectSetupData } from "@/types/configuration";
-import { stageTypes } from "@/types/stage";
 
 /** At least one of the preview and release keys is required. */
 const caasApiKeysSchema = z
@@ -15,11 +15,12 @@ const caasApiKeysSchema = z
 
 const schema = z.object({
 	customerName: z.string().trim().min(1, "required"),
-	stage: z.enum(stageTypes),
 	projectName: z.string().min(1, "required"),
 	caasApiKeys: caasApiKeysSchema,
-	caasUrl: z.url("required"),
-}) satisfies z.ZodSchema<ProjectSetupData>;
+	caasUrl: z
+		.url("required")
+		.refine((url) => getStageFromCaasUrl(url) !== null, "stageNotDetected"),
+}) satisfies z.ZodSchema<Omit<ProjectSetupData, "stage">>;
 
 type Inputs = z.infer<typeof schema>;
 

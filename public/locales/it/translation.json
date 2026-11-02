@@ -27,12 +27,7 @@
 						}
 					},
 					"stage": {
-						"label": "Stage",
-						"options": {
-							"dev": "Dev",
-							"qa": "QA",
-							"prod": "Prod"
-						}
+						"detected": "Stage rilevato"
 					},
 					"projectName": {
 						"label": "Progetto",
@@ -56,7 +51,8 @@
 						"label": "URL CaaS",
 						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
-							"required": "Questo campo è obbligatorio"
+							"required": "Questo campo è obbligatorio",
+							"stageNotDetected": "Impossibile rilevare lo stage. Il percorso dell'URL deve iniziare con /CLIENTE-STAGE/ (es. /example-dev/)."
 						}
 					},
 					"submitBtn": "Salva",

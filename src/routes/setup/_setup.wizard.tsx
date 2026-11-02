@@ -15,8 +15,6 @@ import { Button } from "@/components/ui/button";
 import ConnectionStatusIcon from "@/components/ui/connection-status-icon";
 import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import {
 	Tooltip,
@@ -26,14 +24,15 @@ import {
 import { getAvailableModes, normalizeCaasApiKeys } from "@/lib/caas-api-keys";
 import { testCaaSApiKeys } from "@/lib/caas-connection-test";
 import { discoverSchemasAndLocales } from "@/lib/caas-discovery";
-import { applyModeToCaasUrl } from "@/lib/caas-url";
+import { applyModeToCaasUrl, getStageFromCaasUrl } from "@/lib/caas-url";
 import {
 	MAGIC_PASTE_PROJECT_ID_PLACEHOLDER,
 	parseMagicPasteCaasUrl,
 } from "@/lib/parse-magic-paste-caas-url";
+import { cn } from "@/lib/tw-utils";
 import { useCaaSConfigStore } from "@/stores/caas-config-store";
 import type { ConnectionStatusType } from "@/types/connection-status";
-import { stageTypes } from "@/types/stage";
+import { stageColors, stageOptionTexts } from "@/types/stage";
 
 export const Route = createFileRoute("/setup/_setup/wizard")({
 	component: RouteComponent,
@@ -54,7 +53,6 @@ function RouteComponent() {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 
-	const stageId = useId();
 	const projectNameId = useId();
 	const caasPreviewApiKeyId = useId();
 	const caasReleaseApiKeyId = useId();
@@ -75,7 +73,6 @@ function RouteComponent() {
 			resolver: zodResolver(schema),
 			defaultValues: {
 				customerName: customerOptions[0] ?? "",
-				stage: "dev",
 				projectName: "",
 				caasApiKeys: { preview: "", release: "" },
 				caasUrl: "",
@@ -85,6 +82,8 @@ function RouteComponent() {
 	const { ref: caasUrlRef, ...caasUrlRegister } = register("caasUrl");
 
 	const onSubmit: SubmitHandler<Inputs> = async (data) => {
+		const stage = getStageFromCaasUrl(data.caasUrl);
+		if (!stage) return;
 		const customerName = resolveCustomerName(
 			data.customerName,
 			customerOptions,
@@ -94,7 +93,7 @@ function RouteComponent() {
 		const hasDuplicateProject = customers.some(
 			(customer) =>
 				customer.customerName.trim().toLowerCase() === normalizedCustomerName &&
-				customer.stages[data.stage].some(
+				customer.stages[stage].some(
 					(project) =>
 						project.projectName.trim().toLowerCase() === normalizedProjectName,
 				),
@@ -132,10 +131,10 @@ function RouteComponent() {
 				return;
 			}
 
-			upsertProjectSetupData({ ...data, customerName });
+			upsertProjectSetupData({ ...data, customerName, stage });
 			setProjectSchemasAndLocales({
 				customerName,
-				stage: data.stage,
+				stage,
 				projectName: data.projectName.trim(),
 				databaseSchemas,
 				locales,
@@ -164,7 +163,7 @@ function RouteComponent() {
 	};
 
 	const { errors } = useFormState({ control });
-	const selectedStage = watch("stage");
+	const detectedStage = getStageFromCaasUrl(watch("caasUrl"));
 	const customerName = watch("customerName");
 	const isFormLocked =
 		connectionStatus === "connected" || isDiscoveringMetadata;
@@ -189,10 +188,6 @@ function RouteComponent() {
 			resolveCustomerName(parsed.customerName, customerOptions),
 			{ shouldValidate: true, shouldDirty: true },
 		);
-		setValue("stage", parsed.stage, {
-			shouldValidate: true,
-			shouldDirty: true,
-		});
 		setValue("caasUrl", parsed.caasUrl, {
 			shouldValidate: true,
 			shouldDirty: true,
@@ -267,29 +262,6 @@ function RouteComponent() {
 			</div>
 			<input type="hidden" {...register("customerName")} />
 
-			<FormField label={t("setup.wizardSetup.step1.form.stage.label")}>
-				<RadioGroup
-					value={selectedStage}
-					onValueChange={(value: Inputs["stage"]) => setValue("stage", value)}
-					disabled={isFormLocked}
-					className="w-fit"
-					aria-label={t("setup.wizardSetup.step1.form.stage.label")}
-				>
-					{stageTypes.map((stage) => {
-						const optionId = `${stageId}-${stage}`;
-						return (
-							<div key={stage} className="flex items-center gap-3">
-								<RadioGroupItem value={stage} id={optionId} />
-								<Label htmlFor={optionId}>
-									{t(`setup.wizardSetup.step1.form.stage.options.${stage}`)}
-								</Label>
-							</div>
-						);
-					})}
-				</RadioGroup>
-				<input type="hidden" {...register("stage")} />
-			</FormField>
-
 			<FormField
 				label={t("setup.wizardSetup.step1.form.projectName.label")}
 				htmlFor={projectNameId}
@@ -334,6 +306,19 @@ function RouteComponent() {
 					}}
 					disabled={isFormLocked}
 				/>
+				{detectedStage && (
+					<span className="mt-2 inline-flex items-center gap-2 text-sm">
+						{`${t("setup.wizardSetup.step1.form.stage.detected")}:`}
+						<span
+							className={cn(
+								"rounded-md px-2 py-0.5 text-xs font-medium inset-ring",
+								stageColors[detectedStage],
+							)}
+						>
+							{stageOptionTexts[detectedStage]}
+						</span>
+					</span>
+				)}
 			</FormField>
 
 			<div className="flex flex-col gap-2">
