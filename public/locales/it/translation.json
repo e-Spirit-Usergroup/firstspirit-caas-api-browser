@@ -61,6 +61,7 @@
 					"discovery": {
 						"inProgress": "Rilevamento di schemi e locale in corso...",
 						"success": "Metadati aggiornati: {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali",
+						"incomplete": "Il rilevamento potrebbe essere incompleto perche CaaS ha restituito un timeout. Trovati {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali; alcuni tipi di entita potrebbero mancare.",
 						"noLocales": "Nessuna locale rilevata. La configurazione non puo continuare senza locali.",
 						"error": "Impossibile rilevare schemi e locali. Controlla l'accesso a CaaS."
 					},
@@ -211,6 +212,7 @@
 				"updateProject": "Aggiorna schemi e locali",
 				"updatingProject": "Aggiornamento schemi e locali in corso...",
 				"updateSuccess": "'{{projectName}}' aggiornato: {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali",
+				"updateIncomplete": "'{{projectName}}' aggiornato, ma il rilevamento potrebbe essere incompleto perche CaaS ha restituito un timeout. Trovati {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali; alcuni tipi di entita potrebbero mancare.",
 				"updateFailed": "Impossibile aggiornare schemi e locali per questo progetto.",
 				"noLocalesDiscovered": "Nessuna locale rilevata per questo progetto.",
 				"removeProject": "Rimuovi progetto",

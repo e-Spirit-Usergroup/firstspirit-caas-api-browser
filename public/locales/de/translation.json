@@ -61,6 +61,7 @@
 					"discovery": {
 						"inProgress": "Schemas und Locales werden erkannt...",
 						"success": "Metadaten aktualisiert: {{schemas}} Schemas, {{entityTypes}} Entity Types, {{locales}} Locales",
+						"incomplete": "Die Erkennung ist möglicherweise unvollständig, da das CaaS ein Timeout gemeldet hat. Gefunden: {{schemas}} Schemas, {{entityTypes}} Entity Types, {{locales}} Locales; einzelne Entity Types könnten fehlen.",
 						"noLocales": "Es wurden keine Locales gefunden. Ohne Locales kann das Setup nicht fortgesetzt werden.",
 						"error": "Schemas und Locales konnten nicht erkannt werden. Bitte CaaS-Zugriff prüfen."
 					},
@@ -211,6 +212,7 @@
 				"updateProject": "Schemas und Locales aktualisieren",
 				"updatingProject": "Schemas und Locales werden aktualisiert...",
 				"updateSuccess": "'{{projectName}}' aktualisiert: {{schemas}} Schemas, {{entityTypes}} Entity Types, {{locales}} Locales",
+				"updateIncomplete": "'{{projectName}}' aktualisiert, die Erkennung ist aber möglicherweise unvollständig, da das CaaS ein Timeout gemeldet hat. Gefunden: {{schemas}} Schemas, {{entityTypes}} Entity Types, {{locales}} Locales; einzelne Entity Types könnten fehlen.",
 				"updateFailed": "Schemas und Locales für dieses Projekt konnten nicht aktualisiert werden.",
 				"noLocalesDiscovered": "Für dieses Projekt wurden keine Locales gefunden.",
 				"removeProject": "entfernen",

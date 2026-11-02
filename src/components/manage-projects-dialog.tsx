@@ -171,10 +171,11 @@ function ManageProjectsDialog({
 		);
 		setUpdatingProjectKey(key);
 		try {
-			const { databaseSchemas, locales } = await discoverSchemasAndLocales({
-				caasUrl: project.project.caasUrl,
-				caasApiKey: project.project.caasApiKey,
-			});
+			const { databaseSchemas, locales, incomplete } =
+				await discoverSchemasAndLocales({
+					caasUrl: project.project.caasUrl,
+					caasApiKey: project.project.caasApiKey,
+				});
 			if (!locales.length) {
 				toast.error(t("app.settings.manageProjects.noLocalesDiscovered"));
 				return;
@@ -186,16 +187,20 @@ function ManageProjectsDialog({
 				databaseSchemas,
 				locales,
 			});
-			toast.success(
-				t("app.settings.manageProjects.updateSuccess", {
-					projectName: project.projectName,
-					schemas: databaseSchemas.length,
-					entityTypes: databaseSchemas.reduce(
-						(acc, schema) => acc + (schema.entityTypeNames?.length ?? 0),
-						0,
-					),
-					locales: locales.length,
-				}),
+			const notify = incomplete ? toast.warning : toast.success;
+			notify(
+				t(
+					`app.settings.manageProjects.${incomplete ? "updateIncomplete" : "updateSuccess"}`,
+					{
+						projectName: project.projectName,
+						schemas: databaseSchemas.length,
+						entityTypes: databaseSchemas.reduce(
+							(acc, schema) => acc + (schema.entityTypeNames?.length ?? 0),
+							0,
+						),
+						locales: locales.length,
+					},
+				),
 			);
 		} catch {
 			toast.error(t("app.settings.manageProjects.updateFailed"));

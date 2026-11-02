@@ -17,6 +17,7 @@ import { FormField } from "@/components/ui/form-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Spinner } from "@/components/ui/spinner";
 import {
 	Tooltip,
 	TooltipContent,
@@ -114,10 +115,11 @@ function RouteComponent() {
 
 		try {
 			setIsDiscoveringMetadata(true);
-			const { databaseSchemas, locales } = await discoverSchemasAndLocales({
-				caasUrl: data.caasUrl,
-				caasApiKey: data.caasApiKey,
-			});
+			const { databaseSchemas, locales, incomplete } =
+				await discoverSchemasAndLocales({
+					caasUrl: data.caasUrl,
+					caasApiKey: data.caasApiKey,
+				});
 
 			if (!locales.length) {
 				toast.error(t("setup.wizardSetup.step1.form.discovery.noLocales"));
@@ -133,15 +135,19 @@ function RouteComponent() {
 				databaseSchemas,
 				locales,
 			});
-			toast.success(
-				t("setup.wizardSetup.step1.form.discovery.success", {
-					schemas: databaseSchemas.length,
-					entityTypes: databaseSchemas.reduce(
-						(acc, s) => acc + (s.entityTypeNames?.length ?? 0),
-						0,
-					),
-					locales: locales.length,
-				}),
+			const notify = incomplete ? toast.warning : toast.success;
+			notify(
+				t(
+					`setup.wizardSetup.step1.form.discovery.${incomplete ? "incomplete" : "success"}`,
+					{
+						schemas: databaseSchemas.length,
+						entityTypes: databaseSchemas.reduce(
+							(acc, s) => acc + (s.entityTypeNames?.length ?? 0),
+							0,
+						),
+						locales: locales.length,
+					},
+				),
 			);
 			navigate({ to: "/app" });
 		} catch {
@@ -345,8 +351,13 @@ function RouteComponent() {
 				/>
 			</FormField>
 
-			{connectionStatus !== "connected" && (
-				<Button type="submit" disabled={isDiscoveringMetadata}>
+			{(connectionStatus !== "connected" || isDiscoveringMetadata) && (
+				<Button
+					type="submit"
+					disabled={isDiscoveringMetadata}
+					aria-busy={isDiscoveringMetadata}
+				>
+					{isDiscoveringMetadata && <Spinner data-icon="inline-start" />}
 					{isDiscoveringMetadata
 						? t("setup.wizardSetup.step1.form.discovery.inProgress")
 						: t("setup.wizardSetup.step1.form.submitBtn")}

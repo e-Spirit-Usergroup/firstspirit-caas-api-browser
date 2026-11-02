@@ -61,6 +61,7 @@
 					"discovery": {
 						"inProgress": "Discovering schemas and locales...",
 						"success": "Updated metadata: {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales",
+						"incomplete": "Discovery may be incomplete because the CaaS timed out. Found {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales; some entity types may be missing.",
 						"noLocales": "No locales were discovered. Setup cannot continue without locales.",
 						"error": "Could not discover schemas and locales. Please check your CaaS access."
 					},
@@ -211,6 +212,7 @@
 				"updateProject": "Update schemas and locales",
 				"updatingProject": "Updating schemas and locales...",
 				"updateSuccess": "Updated '{{projectName}}': {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales",
+				"updateIncomplete": "Updated '{{projectName}}', but discovery may be incomplete because the CaaS timed out. Found {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales; some entity types may be missing.",
 				"updateFailed": "Failed to update schemas and locales for this project.",
 				"noLocalesDiscovered": "No locales were discovered for this project.",
 				"removeProject": "Remove project",

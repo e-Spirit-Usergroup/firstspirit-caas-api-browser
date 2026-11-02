@@ -10,6 +10,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Spinner } from "./ui/spinner";
 import {
 	Table,
 	TableBody,
@@ -121,7 +122,15 @@ function ProjectsTable({
 													/>
 												}
 											>
-												<MoreHorizontal className="size-4" />
+												{updatingProjectKey === key ? (
+													<Spinner
+														aria-label={t(
+															"app.settings.manageProjects.updatingProject",
+														)}
+													/>
+												) : (
+													<MoreHorizontal className="size-4" />
+												)}
 											</DropdownMenuTrigger>
 											<DropdownMenuContent align="end">
 												<DropdownMenuItem
