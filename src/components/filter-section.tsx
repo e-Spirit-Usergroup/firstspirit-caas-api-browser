@@ -151,7 +151,6 @@ function FilterSection({
 			{/* Name / Identifier / Route selector */}
 			{filterType &&
 				filterType !== "none" &&
-				filterType !== "Dataset" &&
 				filterType !== "ProjectProperties" && (
 					<div className="col-span-12 flex flex-col gap-1.5">
 						<span className="text-sm font-semibold">
