@@ -2,10 +2,14 @@ import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { getAvailableModes } from "@/lib/caas-api-keys";
 import { discoverSchemasAndLocales } from "@/lib/caas-discovery";
+import { applyModeToCaasUrl } from "@/lib/caas-url";
 import { cn } from "@/lib/tw-utils";
 import { useCaaSConfigStore } from "@/stores/caas-config-store";
+import type { CaasApiKeys } from "@/types/configuration";
 import { stageTypes } from "@/types/stage";
+import { EditApiKeysStep } from "./edit-api-keys-step";
 import Icon from "./icons/icon";
 import {
 	BulkDeleteDialog,
@@ -41,12 +45,18 @@ function ManageProjectsDialog({
 	onAddNewProjectClick,
 }: ManageProjectsDialogProps) {
 	const { t } = useTranslation();
-	const { customers, removeProject, setProjectSchemasAndLocales } =
-		useCaaSConfigStore();
+	const {
+		customers,
+		removeProject,
+		setProjectSchemasAndLocales,
+		setProjectApiKeys,
+	} = useCaaSConfigStore();
 	const [selectedProjectKeys, setSelectedProjectKeys] = useState<Set<string>>(
 		new Set(),
 	);
 	const [projectPendingDeletion, setProjectPendingDeletion] =
+		useState<ProjectRow | null>(null);
+	const [projectEditingApiKeys, setProjectEditingApiKeys] =
 		useState<ProjectRow | null>(null);
 	const [isBulkDeleteAlertOpen, setIsBulkDeleteAlertOpen] = useState(false);
 	const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
@@ -169,12 +179,18 @@ function ManageProjectsDialog({
 			project.stage,
 			project.projectName,
 		);
+		const { caasApiKeys, caasUrl } = project.project;
+		const [discoveryMode] = getAvailableModes(caasApiKeys);
+		if (!discoveryMode) {
+			toast.error(t("app.settings.manageProjects.updateFailed"));
+			return;
+		}
 		setUpdatingProjectKey(key);
 		try {
 			const { databaseSchemas, locales, incomplete } =
 				await discoverSchemasAndLocales({
-					caasUrl: project.project.caasUrl,
-					caasApiKey: project.project.caasApiKey,
+					caasUrl: applyModeToCaasUrl(caasUrl, discoveryMode),
+					caasApiKey: caasApiKeys[discoveryMode] ?? "",
 				});
 			if (!locales.length) {
 				toast.error(t("app.settings.manageProjects.noLocalesDiscovered"));
@@ -209,68 +225,104 @@ function ManageProjectsDialog({
 		}
 	};
 
+	const saveProjectApiKeys = (
+		project: ProjectRow,
+		caasApiKeys: CaasApiKeys,
+	) => {
+		setProjectApiKeys({
+			customerName: project.customerName,
+			stage: project.stage,
+			projectName: project.projectName,
+			caasApiKeys,
+		});
+		toast.success(
+			t("app.settings.manageProjects.apiKeysUpdated", {
+				projectName: project.projectName,
+			}),
+		);
+		setProjectEditingApiKeys(null);
+	};
+
 	return (
 		<Dialog
 			open={open}
 			onOpenChange={(nextOpen) => {
 				onOpenChange(nextOpen);
-				if (!nextOpen) setSelectedProjectKeys(new Set());
+				if (!nextOpen) {
+					setSelectedProjectKeys(new Set());
+					setProjectEditingApiKeys(null);
+				}
 			}}
 		>
 			<DialogContent className="sm:max-w-4xl w-[95vw]">
-				<DialogHeader>
-					<DialogTitle>{t("app.settings.manageProjects.title")}</DialogTitle>
-					<DialogDescription>
-						{t("app.settings.manageProjects.subtitle")}
-					</DialogDescription>
-				</DialogHeader>
-				<div className="flex items-center justify-end">
-					<Link
-						to="/setup"
-						onClick={onAddNewProjectClick}
-						className={cn(buttonVariants())}
-					>
-						<Icon icon="plus" className="size-4" data-icon="inline-start" />
-						{t("app.settings.dialog.addProject")}
-					</Link>
-				</div>
-				<ProjectsTable
-					projects={sortedProjects}
-					selectedProjectKeys={selectedProjectKeys}
-					updatingProjectKey={updatingProjectKey}
-					isAllSelected={isAllProjectsSelected}
-					isSomeSelected={isSomeProjectsSelected}
-					onToggleAll={toggleAllProjectsSelection}
-					onToggleProject={toggleProjectSelection}
-					onUpdateMetadata={(project) => void updateProjectMetadata(project)}
-					onDeleteProject={setProjectPendingDeletion}
-				/>
-				<div className="flex items-center justify-start">
-					<DropdownMenu>
-						<DropdownMenuTrigger
-							render={
-								<Button
-									type="button"
-									variant="outline"
-									disabled={selectedProjects.length === 0}
-								/>
-							}
-						>
-							{t("app.settings.manageProjects.actions")}
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="start">
-							<DropdownMenuItem onClick={() => setIsExportDialogOpen(true)}>
-								{t("app.settings.manageProjects.exportSelected")}
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								variant="destructive"
-								onClick={() => setIsBulkDeleteAlertOpen(true)}
+				{projectEditingApiKeys ? (
+					<EditApiKeysStep
+						project={projectEditingApiKeys}
+						onSave={saveProjectApiKeys}
+						onBack={() => setProjectEditingApiKeys(null)}
+					/>
+				) : (
+					<>
+						<DialogHeader>
+							<DialogTitle>
+								{t("app.settings.manageProjects.title")}
+							</DialogTitle>
+							<DialogDescription>
+								{t("app.settings.manageProjects.subtitle")}
+							</DialogDescription>
+						</DialogHeader>
+						<div className="flex items-center justify-end">
+							<Link
+								to="/setup"
+								onClick={onAddNewProjectClick}
+								className={cn(buttonVariants())}
 							>
-								{t("app.settings.manageProjects.deleteSelected")}
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				</div>
+								<Icon icon="plus" className="size-4" data-icon="inline-start" />
+								{t("app.settings.dialog.addProject")}
+							</Link>
+						</div>
+						<ProjectsTable
+							projects={sortedProjects}
+							selectedProjectKeys={selectedProjectKeys}
+							updatingProjectKey={updatingProjectKey}
+							isAllSelected={isAllProjectsSelected}
+							isSomeSelected={isSomeProjectsSelected}
+							onToggleAll={toggleAllProjectsSelection}
+							onToggleProject={toggleProjectSelection}
+							onUpdateMetadata={(project) =>
+								void updateProjectMetadata(project)
+							}
+							onEditApiKeys={setProjectEditingApiKeys}
+							onDeleteProject={setProjectPendingDeletion}
+						/>
+						<div className="flex items-center justify-start">
+							<DropdownMenu>
+								<DropdownMenuTrigger
+									render={
+										<Button
+											type="button"
+											variant="outline"
+											disabled={selectedProjects.length === 0}
+										/>
+									}
+								>
+									{t("app.settings.manageProjects.actions")}
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="start">
+									<DropdownMenuItem onClick={() => setIsExportDialogOpen(true)}>
+										{t("app.settings.manageProjects.exportSelected")}
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										variant="destructive"
+										onClick={() => setIsBulkDeleteAlertOpen(true)}
+									>
+										{t("app.settings.manageProjects.deleteSelected")}
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+					</>
+				)}
 			</DialogContent>
 
 			<DeleteProjectDialog

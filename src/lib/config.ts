@@ -1,5 +1,6 @@
+import type { CaasApiKeys, CustomerConfig } from "../types/configuration";
+import { modeTypes } from "../types/mode";
 import { encryptCaasApiKey } from "./config-crypto";
-import type { CustomerConfig } from "../types/configuration";
 
 type ExportConfigPayload = {
 	customers: CustomerConfig[];
@@ -7,7 +8,7 @@ type ExportConfigPayload = {
 
 type ExportedProjectConfig = {
 	project: string;
-	encryptedCaasApiKey: string;
+	encryptedCaasApiKeys: CaasApiKeys;
 	caasApiUrl: string;
 	databaseSchemas: CustomerConfig["stages"]["dev"][number]["databaseSchemas"];
 	locales: CustomerConfig["stages"]["dev"][number]["locales"];
@@ -26,11 +27,17 @@ const toExportedProject = async (
 	project: CustomerConfig["stages"]["dev"][number],
 	password: string,
 ): Promise<ExportedProjectConfig> => {
-	const encryptedCaasApiKey = await encryptCaasApiKey(project.caasApiKey, password);
+	const encryptedCaasApiKeys: CaasApiKeys = {};
+	for (const mode of modeTypes) {
+		const apiKey = project.caasApiKeys[mode];
+		if (apiKey) {
+			encryptedCaasApiKeys[mode] = await encryptCaasApiKey(apiKey, password);
+		}
+	}
 
 	return {
 		project: project.projectName,
-		encryptedCaasApiKey,
+		encryptedCaasApiKeys,
 		caasApiUrl: project.caasUrl,
 		databaseSchemas: project.databaseSchemas,
 		locales: project.locales,
@@ -46,13 +53,19 @@ const toExportedCustomers = async (
 			customer: customer.customerName,
 			stages: {
 				dev: await Promise.all(
-					customer.stages.dev.map((project) => toExportedProject(project, password)),
+					customer.stages.dev.map((project) =>
+						toExportedProject(project, password),
+					),
 				),
 				qa: await Promise.all(
-					customer.stages.qa.map((project) => toExportedProject(project, password)),
+					customer.stages.qa.map((project) =>
+						toExportedProject(project, password),
+					),
 				),
 				prod: await Promise.all(
-					customer.stages.prod.map((project) => toExportedProject(project, password)),
+					customer.stages.prod.map((project) =>
+						toExportedProject(project, password),
+					),
 				),
 			},
 		})),
@@ -69,7 +82,7 @@ const downloadConfigAsJson = (
 
 	const buildAndDownload = async (): Promise<boolean> => {
 		const json = JSON.stringify(
-			{ version: 2, customers: await toExportedCustomers(customers, password) },
+			{ version: 3, customers: await toExportedCustomers(customers, password) },
 			null,
 			2,
 		);
@@ -105,4 +118,5 @@ export const SaveConfigToJson = (
 export const SaveSelectedProjectsToJson = (
 	payload: ExportConfigPayload,
 	password: string,
-): Promise<boolean> => downloadConfigAsJson(payload, "export_selected", password);
+): Promise<boolean> =>
+	downloadConfigAsJson(payload, "export_selected", password);

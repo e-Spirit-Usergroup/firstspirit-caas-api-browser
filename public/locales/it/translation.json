@@ -43,11 +43,14 @@
 						}
 					},
 					"caasApiKey": {
-						"label": "Chiave API CaaS",
+						"previewLabel": "Chiave API CaaS (Preview)",
+						"releaseLabel": "Chiave API CaaS (Release)",
 						"placeholder": "Chiave API CaaS",
 						"validation": {
-							"required": "Questo campo è obbligatorio"
-						}
+							"required": "Questo campo è obbligatorio",
+							"atLeastOne": "Inserisci almeno una chiave API (preview o release)"
+						},
+						"hint": "È richiesta almeno una chiave API. L'altra può essere aggiunta in seguito tramite Gestisci progetti."
 					},
 					"caasUrl": {
 						"label": "URL CaaS",
@@ -171,7 +174,8 @@
 					"options": {
 						"preview": "Preview",
 						"release": "Release"
-					}
+					},
+					"noApiKey": "nessuna chiave API"
 				},
 				"queryParams": {
 					"label": "Parametri di query",
@@ -211,6 +215,8 @@
 				"actions": "Azioni",
 				"updateProject": "Aggiorna schemi e locali",
 				"updatingProject": "Aggiornamento schemi e locali in corso...",
+				"editApiKeys": "Modifica chiavi API",
+				"editApiKeysDescription": "È richiesta almeno una chiave. Ogni chiave viene verificata con CaaS prima del salvataggio.",
 				"updateSuccess": "'{{projectName}}' aggiornato: {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali",
 				"updateIncomplete": "'{{projectName}}' aggiornato, ma il rilevamento potrebbe essere incompleto perche CaaS ha restituito un timeout. Trovati {{schemas}} schemi, {{entityTypes}} tipi di entita, {{locales}} locali; alcuni tipi di entita potrebbero mancare.",
 				"updateFailed": "Impossibile aggiornare schemi e locali per questo progetto.",
@@ -226,6 +232,9 @@
 				"selectProject": "Seleziona progetto {{projectName}}",
 				"confirm": "Conferma",
 				"cancel": "Annulla",
+				"back": "Indietro",
+				"save": "Salva",
+				"apiKeysUpdated": "Chiavi API aggiornate per '{{projectName}}'",
 				"addNewProject": "Aggiungi nuovo progetto",
 				"emptyState": "Nessun progetto configurato.",
 				"confirmRemove": "Rimuovere il progetto '{{projectName}}' da {{customerName}} ({{stage}})?",

@@ -1,3 +1,4 @@
+import type { ModeType } from "./mode";
 import type { StageType } from "./stage";
 
 export type DatabaseSchema = {
@@ -7,11 +8,14 @@ export type DatabaseSchema = {
 
 export type Locales = string[];
 
+/** CaaS API keys per mode; at least one is set for a configured project. */
+export type CaasApiKeys = Partial<Record<ModeType, string>>;
+
 export type ProjectSetupData = {
 	customerName: string;
 	stage: StageType;
 	projectName: string;
-	caasApiKey: string;
+	caasApiKeys: CaasApiKeys;
 	caasUrl: string;
 };
 

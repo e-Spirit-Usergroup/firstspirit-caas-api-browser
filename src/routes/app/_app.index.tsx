@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/resizable";
 import { Spinner } from "@/components/ui/spinner";
 import { UrlDisplay } from "@/components/url-display";
+import { resolveMode } from "@/lib/caas-api-keys";
 import { buildCaaSRequest } from "@/lib/caas-request";
 import { cn } from "@/lib/tw-utils";
 import {
@@ -55,7 +56,8 @@ function RouteComponent() {
 	const [isExecuting, setIsExecuting] = useState(false);
 
 	const { register, handleSubmit, setValue, watch } = useForm<AppFormData>();
-	const { locale, setLocale, mode, np, rep, count } = useSettingsStore();
+	const { locale, setLocale, mode, setMode, np, rep, count } =
+		useSettingsStore();
 	const navigate = useNavigate();
 
 	const filterType = watch("filterType");
@@ -90,6 +92,14 @@ function RouteComponent() {
 		}
 	}, [projectSettings?.locales, locale, setLocale]);
 
+	// Switch to a mode the active project has an API key for
+	useEffect(() => {
+		const availableMode = resolveMode(projectSettings?.caasApiKeys, mode);
+		if (availableMode && availableMode !== mode) {
+			setMode(availableMode);
+		}
+	}, [projectSettings?.caasApiKeys, mode, setMode]);
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <>
 	useEffect(() => {
 		if (!hasExecutedRequestRef.current) return;
@@ -97,7 +107,8 @@ function RouteComponent() {
 	}, [mode, locale, handleSubmit]);
 
 	async function onSubmit(data: AppFormData) {
-		if (!projectSettings?.caasUrl || !projectSettings?.caasApiKey) {
+		const caasApiKey = projectSettings?.caasApiKeys[mode];
+		if (!projectSettings?.caasUrl || !caasApiKey) {
 			toast.error(t("app.form.error.missingUrl"));
 			return;
 		}
@@ -117,7 +128,7 @@ function RouteComponent() {
 
 		try {
 			const response = await fetch(url, {
-				headers: { Authorization: `Bearer ${projectSettings.caasApiKey}` },
+				headers: { Authorization: `Bearer ${caasApiKey}` },
 			});
 
 			if (!response.ok) {

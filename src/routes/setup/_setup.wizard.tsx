@@ -23,8 +23,10 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { testCaaSConnection } from "@/lib/caas-connection-test";
+import { getAvailableModes, normalizeCaasApiKeys } from "@/lib/caas-api-keys";
+import { testCaaSApiKeys } from "@/lib/caas-connection-test";
 import { discoverSchemasAndLocales } from "@/lib/caas-discovery";
+import { applyModeToCaasUrl } from "@/lib/caas-url";
 import {
 	MAGIC_PASTE_PROJECT_ID_PLACEHOLDER,
 	parseMagicPasteCaasUrl,
@@ -54,7 +56,8 @@ function RouteComponent() {
 
 	const stageId = useId();
 	const projectNameId = useId();
-	const caasApiKeyId = useId();
+	const caasPreviewApiKeyId = useId();
+	const caasReleaseApiKeyId = useId();
 	const caasUrlId = useId();
 	const caasUrlInputRef = useRef<HTMLInputElement>(null);
 
@@ -74,7 +77,7 @@ function RouteComponent() {
 				customerName: customerOptions[0] ?? "",
 				stage: "dev",
 				projectName: "",
-				caasApiKey: "",
+				caasApiKeys: { preview: "", release: "" },
 				caasUrl: "",
 			},
 			mode: "onChange",
@@ -105,20 +108,22 @@ function RouteComponent() {
 			return;
 		}
 
-		const isConnected = await testCaaSConnection(
+		const caasApiKeys = normalizeCaasApiKeys(data.caasApiKeys);
+		const isConnected = await testCaaSApiKeys(
 			data.caasUrl,
-			data.caasApiKey,
+			caasApiKeys,
 			setConnectionStatus,
 			t,
 		);
 		if (!isConnected) return;
+		const [discoveryMode] = getAvailableModes(caasApiKeys);
 
 		try {
 			setIsDiscoveringMetadata(true);
 			const { databaseSchemas, locales, incomplete } =
 				await discoverSchemasAndLocales({
-					caasUrl: data.caasUrl,
-					caasApiKey: data.caasApiKey,
+					caasUrl: applyModeToCaasUrl(data.caasUrl, discoveryMode),
+					caasApiKey: caasApiKeys[discoveryMode] ?? "",
 				});
 
 			if (!locales.length) {
@@ -308,26 +313,6 @@ function RouteComponent() {
 			</FormField>
 
 			<FormField
-				label={t("setup.wizardSetup.step1.form.caasApiKey.label")}
-				htmlFor={caasApiKeyId}
-				error={
-					errors.caasApiKey
-						? t(
-								`setup.wizardSetup.step1.form.caasApiKey.validation.${errors.caasApiKey.message}`,
-							)
-						: undefined
-				}
-			>
-				<Input
-					type="password"
-					id={caasApiKeyId}
-					placeholder={t("setup.wizardSetup.step1.form.caasApiKey.placeholder")}
-					{...register("caasApiKey")}
-					disabled={isFormLocked}
-				/>
-			</FormField>
-
-			<FormField
 				label={t("setup.wizardSetup.step1.form.caasUrl.label")}
 				htmlFor={caasUrlId}
 				error={
@@ -350,6 +335,49 @@ function RouteComponent() {
 					disabled={isFormLocked}
 				/>
 			</FormField>
+
+			<div className="flex flex-col gap-2">
+				<FormField
+					label={t("setup.wizardSetup.step1.form.caasApiKey.previewLabel")}
+					htmlFor={caasPreviewApiKeyId}
+					error={
+						errors.caasApiKeys?.preview
+							? t(
+									`setup.wizardSetup.step1.form.caasApiKey.validation.${errors.caasApiKeys.preview.message}`,
+								)
+							: undefined
+					}
+				>
+					<Input
+						type="password"
+						id={caasPreviewApiKeyId}
+						placeholder={t(
+							"setup.wizardSetup.step1.form.caasApiKey.placeholder",
+						)}
+						{...register("caasApiKeys.preview")}
+						disabled={isFormLocked}
+					/>
+				</FormField>
+				<FormField
+					label={t("setup.wizardSetup.step1.form.caasApiKey.releaseLabel")}
+					htmlFor={caasReleaseApiKeyId}
+				>
+					<Input
+						type="password"
+						id={caasReleaseApiKeyId}
+						placeholder={t(
+							"setup.wizardSetup.step1.form.caasApiKey.placeholder",
+						)}
+						{...register("caasApiKeys.release", {
+							deps: "caasApiKeys.preview",
+						})}
+						disabled={isFormLocked}
+					/>
+				</FormField>
+				<p className="text-muted-foreground text-xs">
+					{t("setup.wizardSetup.step1.form.caasApiKey.hint")}
+				</p>
+			</div>
 
 			{(connectionStatus !== "connected" || isDiscoveringMetadata) && (
 				<Button

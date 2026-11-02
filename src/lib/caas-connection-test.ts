@@ -1,12 +1,19 @@
 import { toast } from "sonner";
+import { getAvailableModes } from "@/lib/caas-api-keys";
+import { applyModeToCaasUrl } from "@/lib/caas-url";
+import type { CaasApiKeys } from "@/types/configuration";
 import type { ConnectionStatusType } from "@/types/connection-status";
+import { modeOptionTexts } from "@/types/mode";
 
 export async function testCaaSConnection(
 	caasUrl: string,
 	caasApiKey: string,
 	onStatusChange: (status: ConnectionStatusType) => void,
 	t: (key: string) => string,
+	label?: string,
 ): Promise<boolean> {
+	const withLabel = (message: string) =>
+		label ? `${label}: ${message}` : message;
 	onStatusChange("testing");
 	try {
 		const url = new URL(caasUrl);
@@ -26,7 +33,9 @@ export async function testCaaSConnection(
 		if (response.status === 200) {
 			onStatusChange("connected");
 			toast.success(
-				t("setup.wizardSetup.step1.form.connectionStatus.toast.status200"),
+				withLabel(
+					t("setup.wizardSetup.step1.form.connectionStatus.toast.status200"),
+				),
 			);
 			return true;
 		}
@@ -41,14 +50,38 @@ export async function testCaaSConnection(
 						? "status404"
 						: "statusError";
 		toast.error(
-			t(`setup.wizardSetup.step1.form.connectionStatus.toast.${toastKey}`),
+			withLabel(
+				t(`setup.wizardSetup.step1.form.connectionStatus.toast.${toastKey}`),
+			),
 		);
 		return false;
 	} catch {
 		onStatusChange("disconnected");
 		toast.error(
-			t("setup.wizardSetup.step1.form.connectionStatus.toast.statusError"),
+			withLabel(
+				t("setup.wizardSetup.step1.form.connectionStatus.toast.statusError"),
+			),
 		);
 		return false;
 	}
+}
+
+/** Tests each configured key against the CaaS URL of its mode; stops at the first failure. */
+export async function testCaaSApiKeys(
+	caasUrl: string,
+	caasApiKeys: CaasApiKeys,
+	onStatusChange: (status: ConnectionStatusType) => void,
+	t: (key: string) => string,
+): Promise<boolean> {
+	for (const mode of getAvailableModes(caasApiKeys)) {
+		const isConnected = await testCaaSConnection(
+			applyModeToCaasUrl(caasUrl, mode),
+			caasApiKeys[mode] ?? "",
+			onStatusChange,
+			t,
+			modeOptionTexts[mode],
+		);
+		if (!isConnected) return false;
+	}
+	return true;
 }

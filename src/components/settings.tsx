@@ -1,11 +1,12 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { getAvailableModes } from "@/lib/caas-api-keys";
 import {
 	getActiveProjectFromState,
 	useCaaSConfigStore,
 } from "@/stores/caas-config-store";
 import { useSettingsStore } from "@/stores/settings-store";
-import type { ModeType } from "@/types/mode";
+import { type ModeType, modeTypes } from "@/types/mode";
 import type { StageType } from "@/types/stage";
 import Icon from "./icons/icon";
 import ManageProjectsDialog from "./manage-projects-dialog";
@@ -104,9 +105,17 @@ function Settings() {
 	const localProjectOptions = localSelectedCustomer
 		? (localSelectedCustomer.stages[localStage] ?? [])
 		: [];
-	const localProjectLocales =
-		localProjectOptions.find((p) => p.projectName === localProjectName)
-			?.locales ?? locales;
+	const localProject = localProjectOptions.find(
+		(p) => p.projectName === localProjectName,
+	);
+	const localProjectLocales = localProject?.locales ?? locales;
+	const localAvailableModes = localProject
+		? getAvailableModes(localProject.caasApiKeys)
+		: [...modeTypes];
+	// Fall back to a mode the selected project has an API key for
+	const effectiveLocalMode = localAvailableModes.includes(localMode)
+		? localMode
+		: (localAvailableModes[0] ?? localMode);
 
 	const handleCustomerChange = (value: string) => {
 		setLocalCustomerName(value);
@@ -125,7 +134,7 @@ function Settings() {
 		setActiveStage(localStage);
 		setActiveProject(localProjectName);
 		setLocale(localLocale);
-		setMode(localMode);
+		setMode(effectiveLocalMode);
 		setNp(localNp);
 		setRep(localRep);
 		setCount(localCount);
@@ -162,11 +171,12 @@ function Settings() {
 							localStage={localStage}
 							localProjectName={localProjectName}
 							localLocale={localLocale}
-							localMode={localMode}
+							localMode={effectiveLocalMode}
 							customerOptions={customerOptions}
 							stageOptions={localStageOptions}
 							projectOptions={localProjectOptions}
 							localeOptions={localProjectLocales}
+							availableModes={localAvailableModes}
 							onCustomerChange={handleCustomerChange}
 							onStageChange={handleStageChange}
 							onProjectChange={setLocalProjectName}

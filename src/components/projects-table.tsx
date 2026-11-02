@@ -42,6 +42,7 @@ type ProjectsTableProps = {
 	onToggleAll: (checked: boolean) => void;
 	onToggleProject: (project: ProjectRow, checked: boolean) => void;
 	onUpdateMetadata: (project: ProjectRow) => void;
+	onEditApiKeys: (project: ProjectRow) => void;
 	onDeleteProject: (project: ProjectRow) => void;
 };
 
@@ -54,6 +55,7 @@ function ProjectsTable({
 	onToggleAll,
 	onToggleProject,
 	onUpdateMetadata,
+	onEditApiKeys,
 	onDeleteProject,
 }: ProjectsTableProps) {
 	const { t } = useTranslation();
@@ -140,6 +142,11 @@ function ProjectsTable({
 													{updatingProjectKey === key
 														? t("app.settings.manageProjects.updatingProject")
 														: t("app.settings.manageProjects.updateProject")}
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onClick={() => onEditApiKeys(project)}
+												>
+													{t("app.settings.manageProjects.editApiKeys")}
 												</DropdownMenuItem>
 												<DropdownMenuItem
 													variant="destructive"

@@ -43,11 +43,14 @@
 						}
 					},
 					"caasApiKey": {
-						"label": "CaaS API Key",
+						"previewLabel": "CaaS API Key (Preview)",
+						"releaseLabel": "CaaS API Key (Release)",
 						"placeholder": "CaaS API Key",
 						"validation": {
-							"required": "This field is required"
-						}
+							"required": "This field is required",
+							"atLeastOne": "Enter at least one API key (preview or release)"
+						},
+						"hint": "At least one API key is required. The other one can be added later via Manage Projects."
 					},
 					"caasUrl": {
 						"label": "CaaS URL",
@@ -171,7 +174,8 @@
 					"options": {
 						"preview": "Preview",
 						"release": "Release"
-					}
+					},
+					"noApiKey": "no API key"
 				},
 				"queryParams": {
 					"label": "Query Parameter",
@@ -211,6 +215,8 @@
 				"actions": "Actions",
 				"updateProject": "Update schemas and locales",
 				"updatingProject": "Updating schemas and locales...",
+				"editApiKeys": "Edit API keys",
+				"editApiKeysDescription": "At least one key is required. Each key is tested against the CaaS before saving.",
 				"updateSuccess": "Updated '{{projectName}}': {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales",
 				"updateIncomplete": "Updated '{{projectName}}', but discovery may be incomplete because the CaaS timed out. Found {{schemas}} schemas, {{entityTypes}} entity types, {{locales}} locales; some entity types may be missing.",
 				"updateFailed": "Failed to update schemas and locales for this project.",
@@ -226,6 +232,9 @@
 				"selectProject": "Select project {{projectName}}",
 				"confirm": "Confirm",
 				"cancel": "Cancel",
+				"back": "Back",
+				"save": "Save",
+				"apiKeysUpdated": "Updated API keys for '{{projectName}}'",
 				"addNewProject": "Add new project",
 				"emptyState": "No projects configured yet.",
 				"confirmRemove": "Remove project '{{projectName}}' from {{customerName}} ({{stage}})?",

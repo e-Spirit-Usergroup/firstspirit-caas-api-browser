@@ -22,6 +22,7 @@ type ProjectSettingsSectionProps = {
 	stageOptions: StageType[];
 	projectOptions: ProjectConfig[];
 	localeOptions: string[];
+	availableModes: ModeType[];
 	onCustomerChange: (value: string) => void;
 	onStageChange: (value: StageType) => void;
 	onProjectChange: (value: string) => void;
@@ -40,6 +41,7 @@ function ProjectSettingsSection({
 	stageOptions,
 	projectOptions,
 	localeOptions,
+	availableModes,
 	onCustomerChange,
 	onStageChange,
 	onProjectChange,
@@ -181,11 +183,20 @@ function ProjectSettingsSection({
 							<SelectValue placeholder={t("app.settings.dialog.mode.label")} />
 						</SelectTrigger>
 						<SelectContent>
-							{modeTypes.map((modeType) => (
-								<SelectItem key={modeType} value={modeType}>
-									{modeOptionTexts[modeType]}
-								</SelectItem>
-							))}
+							{modeTypes.map((modeType) => {
+								const hasApiKey = availableModes.includes(modeType);
+								return (
+									<SelectItem
+										key={modeType}
+										value={modeType}
+										disabled={!hasApiKey}
+									>
+										{hasApiKey
+											? modeOptionTexts[modeType]
+											: `${modeOptionTexts[modeType]} (${t("app.settings.dialog.mode.noApiKey")})`}
+									</SelectItem>
+								);
+							})}
 						</SelectContent>
 					</Select>
 				</div>

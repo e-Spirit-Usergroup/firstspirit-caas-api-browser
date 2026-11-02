@@ -1,10 +1,13 @@
 import { decryptCaasApiKey } from '@/lib/config-crypto';
+import { normalizeCaasApiKeys } from '@/lib/caas-api-keys';
 import { normalizeCaasUrlForStorage } from '@/lib/caas-url';
 import type {
     ActiveProjectSelection,
+    CaasApiKeys,
     CustomerConfig,
     DatabaseSchema,
 } from '@/types/configuration';
+import { modeTypes } from '@/types/mode';
 import { migrateV1Config } from '@/stores/caas-config-store';
 import { stageTypes, type StageType } from '@/types/stage';
 
@@ -45,7 +48,8 @@ export function hasEncryptedApiKeys(config: unknown): boolean {
                 if (
                     typeof rawProject === 'object' &&
                     rawProject !== null &&
-                    'encryptedCaasApiKey' in rawProject
+                    ('encryptedCaasApiKey' in rawProject ||
+                        'encryptedCaasApiKeys' in rawProject)
                 ) {
                     return true;
                 }
@@ -81,6 +85,67 @@ const isValidDatabaseSchemas = (value: unknown): boolean =>
 
 const isStringArray = (value: unknown): value is string[] =>
     Array.isArray(value) && value.every((item) => typeof item === 'string');
+
+const isApiKeyMap = (value: unknown): value is CaasApiKeys =>
+    typeof value === 'object' &&
+    value !== null &&
+    modeTypes.every((mode) => {
+        const key = (value as Record<string, unknown>)[mode];
+        return key === undefined || typeof key === 'string';
+    });
+
+const decryptApiKey = async (encrypted: string, password?: string): Promise<string> => {
+    if (!password?.trim()) {
+        throw new Error('ENCRYPTED_PASSWORD_REQUIRED');
+    }
+    try {
+        return await decryptCaasApiKey(encrypted, password);
+    } catch {
+        throw new Error('INVALID_DECRYPTION_PASSWORD');
+    }
+};
+
+// Files up to version 2 hold a single key; like the store migration, it becomes the preview key.
+const parseProjectApiKeys = async (
+    project: {
+        caasApiKey?: unknown;
+        encryptedCaasApiKey?: unknown;
+        caasApiKeys?: unknown;
+        encryptedCaasApiKeys?: unknown;
+    },
+    password?: string,
+): Promise<CaasApiKeys> => {
+    let keys: CaasApiKeys;
+    if (project.caasApiKeys !== undefined) {
+        if (!isApiKeyMap(project.caasApiKeys)) {
+            throw new Error('Invalid project payload');
+        }
+        keys = project.caasApiKeys;
+    } else if (project.encryptedCaasApiKeys !== undefined) {
+        if (!isApiKeyMap(project.encryptedCaasApiKeys)) {
+            throw new Error('Invalid project payload');
+        }
+        keys = {};
+        for (const mode of modeTypes) {
+            const encrypted = project.encryptedCaasApiKeys[mode];
+            if (encrypted) {
+                keys[mode] = await decryptApiKey(encrypted, password);
+            }
+        }
+    } else if (typeof project.caasApiKey === 'string') {
+        keys = { preview: project.caasApiKey };
+    } else if (typeof project.encryptedCaasApiKey === 'string') {
+        keys = { preview: await decryptApiKey(project.encryptedCaasApiKey, password) };
+    } else {
+        throw new Error('Invalid project payload');
+    }
+
+    const normalizedKeys = normalizeCaasApiKeys(keys);
+    if (!normalizedKeys.preview && !normalizedKeys.release) {
+        throw new Error('Invalid project payload');
+    }
+    return normalizedKeys;
+};
 
 export async function parseImportedConfig(
     config: unknown,
@@ -160,7 +225,10 @@ export async function parseImportedConfig(
                     project === null ||
                     (!('projectName' in project) && !('project' in project)) ||
                     (!('caasUrl' in project) && !('caasApiUrl' in project)) ||
-                    (!('caasApiKey' in project) && !('encryptedCaasApiKey' in project)) ||
+                    (!('caasApiKey' in project) &&
+                        !('encryptedCaasApiKey' in project) &&
+                        !('caasApiKeys' in project) &&
+                        !('encryptedCaasApiKeys' in project)) ||
                     !('databaseSchemas' in project) ||
                     !('locales' in project)
                 ) {
@@ -173,6 +241,8 @@ export async function parseImportedConfig(
                     caasUrl?: unknown;
                     caasApiKey?: unknown;
                     encryptedCaasApiKey?: unknown;
+                    caasApiKeys?: unknown;
+                    encryptedCaasApiKeys?: unknown;
                     databaseSchemas: unknown;
                     locales: unknown;
                 };
@@ -194,36 +264,14 @@ export async function parseImportedConfig(
                     throw new Error('Invalid project payload');
                 }
 
-                let caasApiKey: string | null = null;
-                if (typeof typedProject.caasApiKey === 'string') {
-                    caasApiKey = typedProject.caasApiKey;
-                } else if (typedProject.encryptedCaasApiKey !== undefined) {
-                    if (typeof typedProject.encryptedCaasApiKey !== 'string') {
-                        throw new Error('Invalid project payload');
-                    }
-                    if (!password?.trim()) {
-                        throw new Error('ENCRYPTED_PASSWORD_REQUIRED');
-                    }
-                    try {
-                        caasApiKey = await decryptCaasApiKey(
-                            typedProject.encryptedCaasApiKey,
-                            password,
-                        );
-                    } catch {
-                        throw new Error('INVALID_DECRYPTION_PASSWORD');
-                    }
-                }
-
-                if (typeof caasApiKey !== 'string') {
-                    throw new Error('Invalid project payload');
-                }
+                const caasApiKeys = await parseProjectApiKeys(typedProject, password);
 
                 stages[stage].push({
                     customerName,
                     stage,
                     projectName: projectNameValue,
                     caasUrl: caasUrlValue,
-                    caasApiKey,
+                    caasApiKeys,
                     databaseSchemas: typedProject.databaseSchemas as DatabaseSchema[] | null,
                     locales: typedProject.locales,
                 });

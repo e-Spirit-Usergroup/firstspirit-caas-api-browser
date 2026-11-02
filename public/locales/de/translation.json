@@ -43,11 +43,14 @@
 						}
 					},
 					"caasApiKey": {
-						"label": "CaaS API Key",
+						"previewLabel": "CaaS API Key (Preview)",
+						"releaseLabel": "CaaS API Key (Release)",
 						"placeholder": "CaaS API Key",
 						"validation": {
-							"required": "Dieses Feld ist erforderlich"
-						}
+							"required": "Dieses Feld ist erforderlich",
+							"atLeastOne": "Bitte mindestens einen API Key angeben (Preview oder Release)"
+						},
+						"hint": "Mindestens ein API Key ist erforderlich. Der andere kann später über „Projekte verwalten“ ergänzt werden."
 					},
 					"caasUrl": {
 						"label": "CaaS URL",
@@ -171,7 +174,8 @@
 					"options": {
 						"preview": "Preview",
 						"release": "Release"
-					}
+					},
+					"noApiKey": "kein API Key"
 				},
 				"queryParams": {
 					"label": "Query Parameter",
@@ -211,6 +215,8 @@
 				"actions": "Aktionen",
 				"updateProject": "Schemas und Locales aktualisieren",
 				"updatingProject": "Schemas und Locales werden aktualisiert...",
+				"editApiKeys": "API Keys bearbeiten",
+				"editApiKeysDescription": "Mindestens ein Key ist erforderlich. Jeder Key wird vor dem Speichern gegen das CaaS getestet.",
 				"updateSuccess": "'{{projectName}}' aktualisiert: {{schemas}} Schemas, {{entityTypes}} Entity Types, {{locales}} Locales",
 				"updateIncomplete": "'{{projectName}}' aktualisiert, die Erkennung ist aber möglicherweise unvollständig, da das CaaS ein Timeout gemeldet hat. Gefunden: {{schemas}} Schemas, {{entityTypes}} Entity Types, {{locales}} Locales; einzelne Entity Types könnten fehlen.",
 				"updateFailed": "Schemas und Locales für dieses Projekt konnten nicht aktualisiert werden.",
@@ -226,6 +232,9 @@
 				"selectProject": "Projekt {{projectName}} auswahlen",
 				"confirm": "Bestatigen",
 				"cancel": "Abbrechen",
+				"back": "Zurück",
+				"save": "Speichern",
+				"apiKeysUpdated": "API Keys für '{{projectName}}' aktualisiert",
 				"addNewProject": "Neues Projekt hinzufügen",
 				"emptyState": "Noch keine Projekte konfiguriert.",
 				"confirmRemove": "Projekt '{{projectName}}' aus {{customerName}} ({{stage}}) entfernen?",

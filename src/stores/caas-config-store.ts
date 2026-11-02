@@ -1,9 +1,11 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { normalizeCaasApiKeys } from "@/lib/caas-api-keys";
 import { normalizeCaasUrlForStorage } from "@/lib/caas-url";
 import type { StageType } from "@/types/stage";
 import type {
 	ActiveProjectSelection,
+	CaasApiKeys,
 	CustomerConfig,
 	DatabaseSchema,
 	ProjectConfig,
@@ -119,15 +121,34 @@ const normalizeProjectConfigUrl = (project: ProjectConfig): ProjectConfig => ({
 	caasUrl: normalizeCaasUrlForStorage(project.caasUrl),
 });
 
-const normalizeCustomers = (customers: CustomerConfig[]): CustomerConfig[] =>
+const mapCustomerProjects = (
+	customers: CustomerConfig[],
+	mapProject: (project: ProjectConfig) => ProjectConfig,
+): CustomerConfig[] =>
 	customers.map((customer) => ({
 		...customer,
 		stages: {
-			dev: customer.stages.dev.map(normalizeProjectConfigUrl),
-			qa: customer.stages.qa.map(normalizeProjectConfigUrl),
-			prod: customer.stages.prod.map(normalizeProjectConfigUrl),
+			dev: customer.stages.dev.map(mapProject),
+			qa: customer.stages.qa.map(mapProject),
+			prod: customer.stages.prod.map(mapProject),
 		},
 	}));
+
+const normalizeCustomers = (customers: CustomerConfig[]): CustomerConfig[] =>
+	mapCustomerProjects(customers, normalizeProjectConfigUrl);
+
+// Before v3 a project had a single `caasApiKey`. Its mode is unknown (the stored
+// URL is always normalized to preview), so it becomes the preview key.
+const migrateLegacyApiKey = (project: ProjectConfig): ProjectConfig => {
+	const { caasApiKey, ...rest } = project as ProjectConfig & {
+		caasApiKey?: string;
+	};
+	return {
+		...rest,
+		caasApiKeys:
+			rest.caasApiKeys ?? normalizeCaasApiKeys({ preview: caasApiKey }),
+	};
+};
 
 export type CaaSConfigStore = {
 	customers: CustomerConfig[];
@@ -137,6 +158,12 @@ export type CaaSConfigStore = {
 		activeSelection?: ActiveProjectSelection | null,
 	) => void;
 	upsertProjectSetupData: (projectSetupData: ProjectSetupData) => void;
+	setProjectApiKeys: (project: {
+		customerName: string;
+		stage: StageType;
+		projectName: string;
+		caasApiKeys: CaasApiKeys;
+	}) => void;
 	setActiveCustomer: (customerName: string) => void;
 	setActiveStage: (stage: StageType) => void;
 	setActiveProject: (projectName: string) => void;
@@ -200,7 +227,7 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 						customerName,
 						stage,
 						projectName,
-						caasApiKey: projectSetupData.caasApiKey,
+						caasApiKeys: normalizeCaasApiKeys(projectSetupData.caasApiKeys),
 						caasUrl: normalizeCaasUrlForStorage(projectSetupData.caasUrl),
 						databaseSchemas: previousProject?.databaseSchemas ?? null,
 						locales: previousProject?.locales ?? [],
@@ -227,6 +254,27 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 							projectName,
 						}),
 					};
+				}),
+			setProjectApiKeys: ({ customerName, stage, projectName, caasApiKeys }) =>
+				set((state) => {
+					const customers = state.customers.map((customer) => {
+						if (customer.customerName !== customerName) {
+							return customer;
+						}
+						const stageProjects = customer.stages[stage].map((project) =>
+							project.projectName === projectName
+								? { ...project, caasApiKeys: normalizeCaasApiKeys(caasApiKeys) }
+								: project,
+						);
+						return {
+							...customer,
+							stages: {
+								...customer.stages,
+								[stage]: stageProjects,
+							},
+						};
+					});
+					return { ...state, customers };
 				}),
 			setActiveCustomer: (customerName) =>
 				set((state) => {
@@ -397,7 +445,7 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 		}),
 		{
 			name: "caas-config-store",
-			version: 2,
+			version: 3,
 			partialize: (state) => ({
 				customers: state.customers,
 				activeSelection: state.activeSelection,
@@ -418,9 +466,13 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 				if (!Array.isArray(state.customers)) {
 					return { customers: [], activeSelection: null };
 				}
+				const customers =
+					version < 3
+						? mapCustomerProjects(state.customers, migrateLegacyApiKey)
+						: state.customers;
 				return {
 					...state,
-					customers: normalizeCustomers(state.customers),
+					customers: normalizeCustomers(customers),
 				};
 			},
 		},
@@ -438,7 +490,8 @@ export const isCaaSConfigStoreInitialized = (): boolean => {
 		activeProject?.customerName &&
 		activeProject?.stage &&
 		activeProject?.projectName &&
-		activeProject?.caasApiKey &&
+		(activeProject?.caasApiKeys.preview ||
+			activeProject?.caasApiKeys.release) &&
 		activeProject?.caasUrl &&
 		activeProject?.locales?.length
 	);
@@ -469,7 +522,7 @@ export function migrateV1Config(persistedState: unknown) {
 		customerName,
 		stage,
 		projectName,
-		caasApiKey: projectSetupData.caasApiKey,
+		caasApiKeys: { preview: projectSetupData.caasApiKey },
 		caasUrl: normalizeCaasUrlForStorage(projectSetupData.caasUrl),
 		databaseSchemas: databaseSchemas ?? null,
 		locales: locales ?? [],
