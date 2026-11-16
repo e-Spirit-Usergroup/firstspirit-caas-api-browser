@@ -18,13 +18,16 @@ function LanguageSwitch({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
 		<div {...props}>
 			<Select
 				value={language}
+				items={languages.map((lang) => ({
+					value: lang.code,
+					label: lang.label,
+				}))}
 				onValueChange={(val) => {
 					i18n.changeLanguage(val);
 					setLanguage(val as typeof language);
 				}}
 			>
-				<SelectTrigger className="shadow-none! border-none! bg-transparent!">
-					{/* <SelectValue /> */}
+				<SelectTrigger className="shadow-none! border-none! bg-transparent! dark:bg-transparent!">
 					<Icon icon="translate" className="size-5" />
 				</SelectTrigger>
 				<SelectContent>

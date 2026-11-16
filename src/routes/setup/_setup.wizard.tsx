@@ -1,22 +1,386 @@
-import Step1 from "@components/entry-wizard/step-1/step-1";
-import Step2 from "@components/entry-wizard/step-2/step-2";
-import Step3 from "@components/entry-wizard/step-3/step-3";
-import { createFileRoute } from "@tanstack/react-router";
-import * as z from "zod";
+import { CustomerNameField } from "@components/entry-wizard/customer-name-field";
+import {
+	type Inputs,
+	schema,
+} from "@components/entry-wizard/setup-form.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { WandSparklesIcon } from "lucide-react";
+import { useId, useMemo, useRef, useState } from "react";
+import { type SubmitHandler, useForm, useFormState } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import Icon from "@/components/icons/icon";
+import { Button } from "@/components/ui/button";
+import ConnectionStatusIcon from "@/components/ui/connection-status-icon";
+import { FormField } from "@/components/ui/form-field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { getAvailableModes, normalizeCaasApiKeys } from "@/lib/caas-api-keys";
+import { testCaaSApiKeys } from "@/lib/caas-connection-test";
+import { discoverSchemasAndLocales } from "@/lib/caas-discovery";
+import { applyModeToCaasUrl, getStageFromCaasUrl } from "@/lib/caas-url";
+import {
+	MAGIC_PASTE_PROJECT_ID_PLACEHOLDER,
+	parseMagicPasteCaasUrl,
+} from "@/lib/parse-magic-paste-caas-url";
+import { cn } from "@/lib/tw-utils";
+import { useCaaSConfigStore } from "@/stores/caas-config-store";
+import type { ConnectionStatusType } from "@/types/connection-status";
+import { stageColors, stageOptionTexts } from "@/types/stage";
 
 export const Route = createFileRoute("/setup/_setup/wizard")({
 	component: RouteComponent,
-	validateSearch: z.object({
-		step: z.number().int().positive().optional().default(1),
-	}),
 });
 
-function RouteComponent() {
+function resolveCustomerName(name: string, existingNames: string[]) {
+	const trimmed = name.trim();
 	return (
-		<>
-			{Route.useSearch().step === 1 && <Step1 />}
-			{Route.useSearch().step === 2 && <Step2 />}
-			{Route.useSearch().step === 3 && <Step3 />}
-		</>
+		existingNames.find(
+			(existing) => existing.trim().toLowerCase() === trimmed.toLowerCase(),
+		) ?? trimmed
+	);
+}
+
+function RouteComponent() {
+	const { upsertProjectSetupData, setProjectSchemasAndLocales, customers } =
+		useCaaSConfigStore();
+	const { t } = useTranslation();
+	const navigate = useNavigate();
+
+	const projectNameId = useId();
+	const caasPreviewApiKeyId = useId();
+	const caasReleaseApiKeyId = useId();
+	const caasUrlId = useId();
+	const caasUrlInputRef = useRef<HTMLInputElement>(null);
+
+	const [connectionStatus, setConnectionStatus] =
+		useState<ConnectionStatusType>("untouched");
+	const [isDiscoveringMetadata, setIsDiscoveringMetadata] = useState(false);
+
+	const customerOptions = useMemo(
+		() => customers.map((c) => c.customerName),
+		[customers],
+	);
+
+	const { register, handleSubmit, control, setValue, watch, setError } =
+		useForm<Inputs>({
+			resolver: zodResolver(schema),
+			defaultValues: {
+				customerName: customerOptions[0] ?? "",
+				projectName: "",
+				caasApiKeys: { preview: "", release: "" },
+				caasUrl: "",
+			},
+			mode: "onChange",
+		});
+	const { ref: caasUrlRef, ...caasUrlRegister } = register("caasUrl");
+
+	const onSubmit: SubmitHandler<Inputs> = async (data) => {
+		const stage = getStageFromCaasUrl(data.caasUrl);
+		if (!stage) return;
+		const customerName = resolveCustomerName(
+			data.customerName,
+			customerOptions,
+		);
+		const normalizedCustomerName = customerName.toLowerCase();
+		const normalizedProjectName = data.projectName.trim().toLowerCase();
+		const hasDuplicateProject = customers.some(
+			(customer) =>
+				customer.customerName.trim().toLowerCase() === normalizedCustomerName &&
+				customer.stages[stage].some(
+					(project) =>
+						project.projectName.trim().toLowerCase() === normalizedProjectName,
+				),
+		);
+
+		if (hasDuplicateProject) {
+			setError("projectName", { type: "manual", message: "duplicate" });
+			toast.error(
+				t("setup.wizardSetup.step1.form.projectName.validation.duplicate"),
+			);
+			return;
+		}
+
+		const caasApiKeys = normalizeCaasApiKeys(data.caasApiKeys);
+		const isConnected = await testCaaSApiKeys(
+			data.caasUrl,
+			caasApiKeys,
+			setConnectionStatus,
+			t,
+		);
+		if (!isConnected) return;
+		const [discoveryMode] = getAvailableModes(caasApiKeys);
+
+		try {
+			setIsDiscoveringMetadata(true);
+			const { databaseSchemas, locales, incomplete } =
+				await discoverSchemasAndLocales({
+					caasUrl: applyModeToCaasUrl(data.caasUrl, discoveryMode),
+					caasApiKey: caasApiKeys[discoveryMode] ?? "",
+				});
+
+			if (!locales.length) {
+				toast.error(t("setup.wizardSetup.step1.form.discovery.noLocales"));
+				setConnectionStatus("disconnected");
+				return;
+			}
+
+			upsertProjectSetupData({ ...data, customerName, stage });
+			setProjectSchemasAndLocales({
+				customerName,
+				stage,
+				projectName: data.projectName.trim(),
+				databaseSchemas,
+				locales,
+			});
+			const notify = incomplete ? toast.warning : toast.success;
+			notify(
+				t(
+					`setup.wizardSetup.step1.form.discovery.${incomplete ? "incomplete" : "success"}`,
+					{
+						schemas: databaseSchemas.length,
+						entityTypes: databaseSchemas.reduce(
+							(acc, s) => acc + (s.entityTypeNames?.length ?? 0),
+							0,
+						),
+						locales: locales.length,
+					},
+				),
+			);
+			navigate({ to: "/app" });
+		} catch {
+			toast.error(t("setup.wizardSetup.step1.form.discovery.error"));
+			setConnectionStatus("disconnected");
+		} finally {
+			setIsDiscoveringMetadata(false);
+		}
+	};
+
+	const { errors } = useFormState({ control });
+	const detectedStage = getStageFromCaasUrl(watch("caasUrl"));
+	const customerName = watch("customerName");
+	const isFormLocked =
+		connectionStatus === "connected" || isDiscoveringMetadata;
+
+	const onMagicPaste = async () => {
+		let clipboardText = "";
+		try {
+			clipboardText = await navigator.clipboard.readText();
+		} catch {
+			toast.error(t("setup.wizardSetup.step1.form.magicPaste.clipboardError"));
+			return;
+		}
+
+		const parsed = parseMagicPasteCaasUrl(clipboardText);
+		if (!parsed) {
+			toast.error(t("setup.wizardSetup.step1.form.magicPaste.invalidUrl"));
+			return;
+		}
+
+		setValue(
+			"customerName",
+			resolveCustomerName(parsed.customerName, customerOptions),
+			{ shouldValidate: true, shouldDirty: true },
+		);
+		setValue("caasUrl", parsed.caasUrl, {
+			shouldValidate: true,
+			shouldDirty: true,
+		});
+		toast.success(t("setup.wizardSetup.step1.form.magicPaste.success"));
+
+		const placeholderStart = parsed.caasUrl.indexOf(
+			MAGIC_PASTE_PROJECT_ID_PLACEHOLDER,
+		);
+		if (placeholderStart >= 0) {
+			requestAnimationFrame(() => {
+				const input = caasUrlInputRef.current;
+				if (!input) {
+					return;
+				}
+				input.focus();
+				input.setSelectionRange(
+					placeholderStart,
+					placeholderStart + MAGIC_PASTE_PROJECT_ID_PLACEHOLDER.length,
+				);
+			});
+		}
+	};
+
+	return (
+		<form
+			className="flex flex-col gap-4 p-4 w-full"
+			onSubmit={handleSubmit(onSubmit)}
+		>
+			<div className="flex flex-col gap-2">
+				<div className="flex items-center justify-end gap-1.5">
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						onClick={onMagicPaste}
+						disabled={isFormLocked}
+					>
+						<WandSparklesIcon />
+						{t("setup.wizardSetup.step1.form.magicPaste.label")}
+					</Button>
+					<Tooltip>
+						<TooltipTrigger type="button" className="inline-flex">
+							<Icon
+								icon="information-circle"
+								className="size-5 text-blue-500"
+							/>
+						</TooltipTrigger>
+						<TooltipContent className="max-w-64">
+							<p>{t("setup.wizardSetup.step1.form.magicPaste.tooltip")}</p>
+						</TooltipContent>
+					</Tooltip>
+				</div>
+				<CustomerNameField
+					customers={customerOptions}
+					isFormLocked={isFormLocked}
+					value={customerName}
+					onValueChange={(value, shouldDirty = true) =>
+						setValue("customerName", value, {
+							shouldValidate: true,
+							shouldDirty,
+						})
+					}
+					error={
+						errors.customerName
+							? t(
+									`setup.wizardSetup.step1.form.customerName.validation.${errors.customerName.message}`,
+								)
+							: undefined
+					}
+				/>
+			</div>
+			<input type="hidden" {...register("customerName")} />
+
+			<FormField
+				label={t("setup.wizardSetup.step1.form.projectName.label")}
+				htmlFor={projectNameId}
+				error={
+					errors.projectName
+						? t(
+								`setup.wizardSetup.step1.form.projectName.validation.${errors.projectName.message}`,
+							)
+						: undefined
+				}
+			>
+				<Input
+					type="text"
+					id={projectNameId}
+					placeholder={t(
+						"setup.wizardSetup.step1.form.projectName.placeholder",
+					)}
+					{...register("projectName")}
+					disabled={isFormLocked}
+				/>
+			</FormField>
+
+			<FormField
+				label={t("setup.wizardSetup.step1.form.caasUrl.label")}
+				htmlFor={caasUrlId}
+				error={
+					errors.caasUrl
+						? t(
+								`setup.wizardSetup.step1.form.caasUrl.validation.${errors.caasUrl.message}`,
+							)
+						: undefined
+				}
+			>
+				<Input
+					type="text"
+					id={caasUrlId}
+					placeholder={t("setup.wizardSetup.step1.form.caasUrl.placeholder")}
+					{...caasUrlRegister}
+					ref={(element) => {
+						caasUrlRef(element);
+						caasUrlInputRef.current = element;
+					}}
+					disabled={isFormLocked}
+				/>
+				{detectedStage && (
+					<span className="mt-2 inline-flex items-center gap-2 text-sm">
+						{`${t("setup.wizardSetup.step1.form.stage.detected")}:`}
+						<span
+							className={cn(
+								"rounded-md px-2 py-0.5 text-xs font-medium inset-ring",
+								stageColors[detectedStage],
+							)}
+						>
+							{stageOptionTexts[detectedStage]}
+						</span>
+					</span>
+				)}
+			</FormField>
+
+			<div className="flex flex-col gap-2">
+				<FormField
+					label={t("setup.wizardSetup.step1.form.caasApiKey.previewLabel")}
+					htmlFor={caasPreviewApiKeyId}
+					error={
+						errors.caasApiKeys?.preview
+							? t(
+									`setup.wizardSetup.step1.form.caasApiKey.validation.${errors.caasApiKeys.preview.message}`,
+								)
+							: undefined
+					}
+				>
+					<Input
+						type="password"
+						id={caasPreviewApiKeyId}
+						placeholder={t(
+							"setup.wizardSetup.step1.form.caasApiKey.placeholder",
+						)}
+						{...register("caasApiKeys.preview")}
+						disabled={isFormLocked}
+					/>
+				</FormField>
+				<FormField
+					label={t("setup.wizardSetup.step1.form.caasApiKey.releaseLabel")}
+					htmlFor={caasReleaseApiKeyId}
+				>
+					<Input
+						type="password"
+						id={caasReleaseApiKeyId}
+						placeholder={t(
+							"setup.wizardSetup.step1.form.caasApiKey.placeholder",
+						)}
+						{...register("caasApiKeys.release", {
+							deps: "caasApiKeys.preview",
+						})}
+						disabled={isFormLocked}
+					/>
+				</FormField>
+				<p className="text-muted-foreground text-xs">
+					{t("setup.wizardSetup.step1.form.caasApiKey.hint")}
+				</p>
+			</div>
+
+			{(connectionStatus !== "connected" || isDiscoveringMetadata) && (
+				<Button
+					type="submit"
+					disabled={isDiscoveringMetadata}
+					aria-busy={isDiscoveringMetadata}
+				>
+					{isDiscoveringMetadata && <Spinner data-icon="inline-start" />}
+					{isDiscoveringMetadata
+						? t("setup.wizardSetup.step1.form.discovery.inProgress")
+						: t("setup.wizardSetup.step1.form.submitBtn")}
+				</Button>
+			)}
+			<span className="inline-flex items-center gap-2 font-semibold text-sm">
+				<ConnectionStatusIcon connectionStatus={connectionStatus} />
+				{`${t("setup.wizardSetup.step1.form.connectionStatus.label")}: `}
+				{t(`setup.wizardSetup.step1.form.connectionStatus.${connectionStatus}`)}
+			</span>
+		</form>
 	);
 }
