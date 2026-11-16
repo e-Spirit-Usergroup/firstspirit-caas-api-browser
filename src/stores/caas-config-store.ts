@@ -11,6 +11,7 @@ import type {
 	ProjectConfig,
 	ProjectSetupData,
 } from "../types/configuration";
+import { inferNavServiceUrl } from "@/lib/config-import";
 
 const createEmptyStages = (): CustomerConfig["stages"] => ({
 	dev: [],
@@ -231,6 +232,7 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 						caasUrl: normalizeCaasUrlForStorage(projectSetupData.caasUrl),
 						databaseSchemas: previousProject?.databaseSchemas ?? null,
 						locales: previousProject?.locales ?? [],
+						navigationServiceUrl: inferNavServiceUrl(projectSetupData.caasUrl),
 					};
 					if (existingProjectIndex >= 0) {
 						nextStageProjects[existingProjectIndex] = nextProject;
@@ -526,6 +528,7 @@ export function migrateV1Config(persistedState: unknown) {
 		caasUrl: normalizeCaasUrlForStorage(projectSetupData.caasUrl),
 		databaseSchemas: databaseSchemas ?? null,
 		locales: locales ?? [],
+		navigationServiceUrl: inferNavServiceUrl(projectSetupData.caasUrl),
 	};
 	const customers: CustomerConfig[] = [
 		{

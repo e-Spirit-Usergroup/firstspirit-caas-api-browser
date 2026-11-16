@@ -274,6 +274,7 @@ export async function parseImportedConfig(
                     caasApiKeys,
                     databaseSchemas: typedProject.databaseSchemas as DatabaseSchema[] | null,
                     locales: typedProject.locales,
+                    navigationServiceUrl: inferNavServiceUrl(caasUrlValue),
                 });
             }
         }
@@ -400,4 +401,19 @@ export function mergeImportedCustomers(
     }
 
     return { merged: mergedCustomers, importedCount, duplicateCount };
+}
+
+export function test (): string {
+    return 'test'
+}
+
+export function inferNavServiceUrl (caasUrl: string): string {
+    let output = caasUrl.replace("caas-api", "navigationservice")
+    const urlSegments = output.split("/")
+    const projectParams = urlSegments[4]
+    const projectId = projectParams.split(".")[0]
+    const previewRelease = projectParams.split(".")[1]
+    output = urlSegments.slice(0, 3).join("/")
+    output = output.concat("/navigation/", previewRelease, ".", projectId)
+    return output
 }

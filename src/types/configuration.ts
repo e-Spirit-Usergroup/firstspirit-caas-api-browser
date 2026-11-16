@@ -17,6 +17,7 @@ export type ProjectSetupData = {
 	projectName: string;
 	caasApiKeys: CaasApiKeys;
 	caasUrl: string;
+	navigationServiceUrl: string;
 };
 
 export type ProjectConfig = ProjectSetupData & {

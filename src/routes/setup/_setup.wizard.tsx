@@ -33,6 +33,7 @@ import { cn } from "@/lib/tw-utils";
 import { useCaaSConfigStore } from "@/stores/caas-config-store";
 import type { ConnectionStatusType } from "@/types/connection-status";
 import { stageColors, stageOptionTexts } from "@/types/stage";
+import { inferNavServiceUrl } from "@/lib/config-import";
 
 export const Route = createFileRoute("/setup/_setup/wizard")({
 	component: RouteComponent,
@@ -131,7 +132,7 @@ function RouteComponent() {
 				return;
 			}
 
-			upsertProjectSetupData({ ...data, customerName, stage });
+			upsertProjectSetupData({ ...data, customerName, stage, navigationServiceUrl: inferNavServiceUrl(data.caasUrl) });
 			setProjectSchemasAndLocales({
 				customerName,
 				stage,
