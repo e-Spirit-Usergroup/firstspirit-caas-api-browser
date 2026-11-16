@@ -100,11 +100,11 @@
 				"invalidDecryptionPassword": "Ungultiges Passwort. Die verschlusselten API-Keys konnten nicht entschlusselt werden."
 			},
 			"decryptDialog": {
-				"title": "Importierte API-Keys entschlusseln",
-				"description": "Diese Datei enthalt verschlusselte CaaS API-Keys. Bitte gib das beim Export verwendete Passwort ein.",
-				"passwordPlaceholder": "Entschlusselungs-Passwort eingeben",
+				"title": "Importierte API-Keys entschlüsseln",
+				"description": "Diese Datei enthalt verschlüsselte CaaS API-Keys. Bitte gib das beim Export verwendete Passwort ein.",
+				"passwordPlaceholder": "Entschlüsselungs-Passwort eingeben",
 				"cancel": "Abbrechen",
-				"confirm": "Entschlusseln und importieren"
+				"confirm": "Entschlüsseln und importieren"
 			}
 		}
 	},
