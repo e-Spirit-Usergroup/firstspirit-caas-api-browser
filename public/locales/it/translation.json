@@ -115,6 +115,28 @@
 			"project": "Progetto",
 			"decodedUrl": "URL decodificato",
 			"noUrlToDisplay": "Nessun URL da visualizzare",
+			"pagination": {
+				"page": "Pagina",
+				"pageError": "Inserisci un numero intero maggiore o uguale a 1",
+				"pageSize": "Dimensione pagina",
+				"pageSizeError": "Inserisci un numero intero tra 1 e {{max}}"
+			},
+			"service": {
+				"label": "API",
+				"caasParameters": "Parametri CaaS",
+				"navParameters": "Parametri di navigazione"
+			},
+			"navigationService": {
+				"fullNavigation": "Navigazione completa",
+				"bySeoRoute": "Per route SEO",
+				"byId": "Per ID",
+				"queryType": "Tipo di query",
+				"format": "Formato",
+				"depth": "Profondità",
+				"allLevels": "tutti i livelli",
+				"route": "Percorso SEO",
+				"id": "ID"
+			},
 			"copyUrlToClipboardBtn": {
 				"label": "Copia URL negli appunti",
 				"success": "URL copiato negli appunti",
@@ -157,6 +179,13 @@
 			"previous": "Precedente",
 			"next": "Successivo",
 			"pageXOfY": "Pagina {{x}} di {{y}}"
+		},
+		"response": {
+			"emptyTitle": "Ancora nessuna risposta {{api}}",
+			"emptyHint": "Scegli i parametri e fai clic su “Esegui”",
+			"duration": "{{ms}} ms",
+			"caasSummary": "{{total}} documenti · {{returned}} in questa pagina",
+			"navSummary": "{{count}} figli"
 		},
 		"settings": {
 			"dialog": {
@@ -241,7 +270,14 @@
 		"json": {
 			"noResponse": "Esegui una query per ottenere una risposta",
 			"codeSampleAlt": "Illustrazione esempio di codice",
-			"executeRequest": "Esegui"
+			"executeRequest": "Esegui",
+			"preview": "Risposta di grandi dimensioni – vengono mostrate le prime {{shown}} di {{total}} voci",
+			"showAll": "Carica la risposta completa",
+			"view": {
+				"label": "Vista",
+				"tree": "Albero",
+				"raw": "JSON"
+			}
 		},
 		"common": {
 			"close": "Chiudi",

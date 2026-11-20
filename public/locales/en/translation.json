@@ -115,6 +115,28 @@
 			"project": "Project",
 			"decodedUrl": "Decoded URL",
 			"noUrlToDisplay": "No URL to display",
+			"pagination": {
+				"page": "Page",
+				"pageError": "Please enter a whole number of 1 or more",
+				"pageSize": "Page size",
+				"pageSizeError": "Please enter a whole number between 1 and {{max}}"
+			},
+			"service": {
+				"label": "API",
+				"caasParameters": "CaaS parameters",
+				"navParameters": "Navigation parameters"
+			},
+			"navigationService": {
+				"fullNavigation": "full navigation",
+				"bySeoRoute": "by SEO route",
+				"byId": "by ID",
+				"queryType": "Query type",
+				"format": "Format",
+				"depth": "Depth",
+				"allLevels": "all levels",
+				"route": "Route",
+				"id": "ID"
+			},
 			"copyUrlToClipboardBtn": {
 				"label": "Copy URL to Clipboard",
 				"success": "URL copied to clipboard",
@@ -157,6 +179,13 @@
 			"previous": "Previous",
 			"next": "Next",
 			"pageXOfY": "Page {{x}} of {{y}}"
+		},
+		"response": {
+			"emptyTitle": "No {{api}} response yet",
+			"emptyHint": "Choose parameters and click “Execute”",
+			"duration": "{{ms}} ms",
+			"caasSummary": "{{total}} documents · {{returned}} on this page",
+			"navSummary": "{{count}} children"
 		},
 		"settings": {
 			"dialog": {
@@ -241,7 +270,14 @@
 		"json": {
 			"noResponse": "Execute a Query to get a response",
 			"codeSampleAlt": "Code sample illustration",
-			"executeRequest": "Execute"
+			"executeRequest": "Execute",
+			"preview": "Large response – showing the first {{shown}} of {{total}} entries",
+			"showAll": "Load full response",
+			"view": {
+				"label": "View",
+				"tree": "Tree",
+				"raw": "JSON"
+			}
 		},
 		"common": {
 			"close": "Close",

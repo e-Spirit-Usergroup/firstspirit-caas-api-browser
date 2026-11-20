@@ -20,6 +20,8 @@ const schema = z.object({
 	caasUrl: z
 		.url("required")
 		.refine((url) => getStageFromCaasUrl(url) !== null, "stageNotDetected"),
+	/** Not entered by the user; derived from the CaaS URL on submit. */
+	navigationServiceUrl: z.string(),
 }) satisfies z.ZodSchema<Omit<ProjectSetupData, "stage">>;
 
 type Inputs = z.infer<typeof schema>;

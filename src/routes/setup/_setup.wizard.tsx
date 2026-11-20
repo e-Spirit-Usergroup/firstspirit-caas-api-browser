@@ -77,6 +77,7 @@ function RouteComponent() {
 				projectName: "",
 				caasApiKeys: { preview: "", release: "" },
 				caasUrl: "",
+				navigationServiceUrl: "",
 			},
 			mode: "onChange",
 		});

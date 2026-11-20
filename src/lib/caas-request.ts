@@ -1,5 +1,9 @@
 import { applyModeToCaasUrl } from "@/lib/caas-url";
-import type { AppFormData } from "@/types/app-form";
+import {
+	type AppFormData,
+	DEFAULT_PAGE,
+	DEFAULT_PAGE_SIZE,
+} from "@/types/app-form";
 import type { ModeType } from "@/types/mode";
 
 type CaaSRequestFlags = {
@@ -8,20 +12,13 @@ type CaaSRequestFlags = {
 	count: boolean;
 };
 
-type BuildCaaSRequestResult = {
-	url: string;
-	/** The page number actually used — may be forced to 1 when pagination flags are off */
-	effectivePage: number;
-};
-
 export function buildCaaSRequest(
 	caasUrl: string,
 	mode: ModeType,
-	page: number,
 	locale: string | null,
 	data: AppFormData,
 	flags: CaaSRequestFlags,
-): BuildCaaSRequestResult {
+): string {
 	const modeAwareCaasUrl = applyModeToCaasUrl(caasUrl, mode);
 	const url = new URL(modeAwareCaasUrl);
 	const searchParams = new URLSearchParams();
@@ -30,9 +27,13 @@ export function buildCaaSRequest(
 	if (flags.count) searchParams.append("count", "");
 	if (flags.rep) searchParams.append("rep", "pj");
 
-	// Pagination only makes sense when np + count are on and rep is off
-	const effectivePage = flags.np && flags.count && !flags.rep ? page : 1;
-	searchParams.append("page", effectivePage.toString());
+	// Only send paging parameters that differ from the CaaS defaults
+	if (data.page != null && data.page !== DEFAULT_PAGE) {
+		searchParams.append("page", String(data.page));
+	}
+	if (data.pagesize != null && data.pagesize !== DEFAULT_PAGE_SIZE) {
+		searchParams.append("pagesize", String(data.pagesize));
+	}
 
 	let filter: Record<string, string> = {};
 
@@ -68,5 +69,5 @@ export function buildCaaSRequest(
 	searchParams.append("filter", JSON.stringify(filter));
 	url.search = searchParams.toString();
 
-	return { url: url.toString(), effectivePage };
+	return url.toString();
 }

@@ -27,6 +27,8 @@
 
 :root {
 	--neo: #950eba;
+	--caas: #d843eb;
+	--nav: #6238fa;
 	--background: #fafafa;
 	--foreground: hsl(0 0% 3.9%);
 	--card: hsl(0 0% 100%);
@@ -83,6 +85,8 @@
 
 @theme inline {
 	--color-neo: var(--neo);
+	--color-caas: var(--caas);
+	--color-nav: var(--nav);
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);

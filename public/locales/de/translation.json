@@ -115,6 +115,28 @@
 			"project": "Projekt",
 			"decodedUrl": "Dekodierte URL",
 			"noUrlToDisplay": "Keine URL zum Anzeigen",
+			"pagination": {
+				"page": "Seite",
+				"pageError": "Bitte eine ganze Zahl ab 1 eingeben",
+				"pageSize": "Seitengröße",
+				"pageSizeError": "Bitte eine ganze Zahl zwischen 1 und {{max}} eingeben"
+			},
+			"service": {
+				"label": "API",
+				"caasParameters": "CaaS-Parameter",
+				"navParameters": "Navigation-Parameter"
+			},
+			"navigationService": {
+				"fullNavigation": "Vollständige Navigation",
+				"bySeoRoute": "Nach SEO-Route",
+				"byId": "Nach ID",
+				"queryType": "Abfrageart",
+				"format": "Format",
+				"depth": "Tiefe",
+				"allLevels": "alle Ebenen",
+				"route": "Route",
+				"id": "ID"
+			},
 			"copyUrlToClipboardBtn": {
 				"label": "URL in die Zwischenablage kopieren",
 				"success": "URL in die Zwischenablage kopiert",
@@ -157,6 +179,13 @@
 			"previous": "Zurück",
 			"next": "Weiter",
 			"pageXOfY": "Seite {{x}} von {{y}}"
+		},
+		"response": {
+			"emptyTitle": "Noch keine {{api}}-Antwort",
+			"emptyHint": "Parameter wählen und „Ausführen“ klicken",
+			"duration": "{{ms}} ms",
+			"caasSummary": "{{total}} Dokumente · {{returned}} auf dieser Seite",
+			"navSummary": "{{count}} Kinder"
 		},
 		"settings": {
 			"dialog": {
@@ -241,7 +270,14 @@
 		"json": {
 			"noResponse": "Führe eine Abfrage aus, um eine Antwort zu erhalten",
 			"codeSampleAlt": "Code-Beispiel Illustration",
-			"executeRequest": "Ausführen"
+			"executeRequest": "Ausführen",
+			"preview": "Große Antwort – die ersten {{shown}} von {{total}} Einträgen werden angezeigt",
+			"showAll": "Vollständige Antwort laden",
+			"view": {
+				"label": "Ansicht",
+				"tree": "Baum",
+				"raw": "JSON"
+			}
 		},
 		"common": {
 			"close": "Schließen",
