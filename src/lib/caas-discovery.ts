@@ -20,7 +20,7 @@ type RawDocument = {
 
 type DiscoveryResponse = {
 	_embedded?: {
-		["rh:doc"]?: RawDocument[];
+		"rh:doc"?: RawDocument[];
 	};
 };
 
@@ -38,7 +38,7 @@ export const normalizeDiscoveredLocale = (locale: RawLocale): string | null => {
 	if (typeof locale === "string") {
 		return locale;
 	}
-	if (!locale || !locale.language || !locale.country) {
+	if (!locale?.language || !locale.country) {
 		return null;
 	}
 	return `${locale.language}_${locale.country}`;

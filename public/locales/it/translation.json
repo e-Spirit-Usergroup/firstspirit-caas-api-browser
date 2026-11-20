@@ -52,7 +52,8 @@
 						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "Questo campo è obbligatorio",
-							"stageNotDetected": "Impossibile rilevare lo stage. Il percorso dell'URL deve iniziare con /CLIENTE-STAGE/ (es. /example-dev/)."
+							"stageNotDetected": "Impossibile rilevare lo stage. Il percorso dell'URL deve iniziare con /CLIENTE-STAGE/ (es. /example-dev/).",
+							"projectNotDetected": "L'URL deve terminare con il segmento del progetto, es. /<projectId>.preview.content."
 						}
 					},
 					"submitBtn": "Salva",
@@ -77,6 +78,13 @@
 							"status403": "Errore 403 | Probabilmente modalità contenuto errata",
 							"status404": "Errore 404 | Probabilmente ID progetto errato",
 							"statusError": "Errore | Probabilmente URL errato"
+						}
+					},
+					"navServiceUrl": {
+						"label": "URL Navigation Service (opzionale)",
+						"hint": "Lascia vuoto per ricavarlo dall'URL CaaS.",
+						"validation": {
+							"invalidUrl": "Inserisci un URL valido"
 						}
 					}
 				}
@@ -105,7 +113,9 @@
 				"passwordPlaceholder": "Inserisci password di decrittazione",
 				"cancel": "Annulla",
 				"confirm": "Decritta e importa"
-			}
+			},
+			"fileTooLarge": "Il file è troppo grande (max. {{maxSize}} MB).",
+			"noFileSelected": "Seleziona prima un file di configurazione."
 		}
 	},
 	"app": {
@@ -172,7 +182,8 @@
 			"error": {
 				"missingUrl": "URL CaaS non configurata",
 				"requestFailed": "Richiesta fallita: {{status}} {{statusText}}",
-				"networkError": "Si è verificato un errore di rete. Controlla la connessione."
+				"networkError": "Si è verificato un errore di rete. Controlla la connessione.",
+				"missingNavServiceUrl": "URL Navigation Service non configurata. Impostala in Gestisci progetti."
 			}
 		},
 		"pagination": {
@@ -263,7 +274,10 @@
 				"addNewProject": "Aggiungi nuovo progetto",
 				"emptyState": "Nessun progetto configurato.",
 				"confirmRemove": "Rimuovere il progetto '{{projectName}}' da {{customerName}} ({{stage}})?",
-				"confirmRemoveSelected": "Rimuovere {{count}} progetto(i) selezionato(i)?"
+				"confirmRemoveSelected": "Rimuovere {{count}} progetto(i) selezionato(i)?",
+				"editProject": "Modifica progetto",
+				"projectUpdated": "'{{projectName}}' aggiornato",
+				"exportPasswordMinLength": "Usa almeno {{count}} caratteri."
 			},
 			"executeRequest": "Esegui"
 		},

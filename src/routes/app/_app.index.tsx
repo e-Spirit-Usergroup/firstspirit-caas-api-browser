@@ -1,33 +1,26 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Navbar } from "@/components/app-navbar";
 import { CaaSParameters } from "@/components/caas-parameters";
-import Icon from "@/components/icons/icon";
 import { NavServiceParameters } from "@/components/nav-service-parameters";
-import { PaginationControls } from "@/components/pagination-controls";
 import { ParameterGroup } from "@/components/parameter-group";
+import { ResponsePanel, type ServiceResult } from "@/components/response-panel";
 import { ServiceSwitch } from "@/components/service-switch";
 import { Button } from "@/components/ui/button";
-import JSONViewer, { type JsonView } from "@/components/ui/json-viewer";
+import type { JsonView } from "@/components/ui/json-viewer";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { Spinner } from "@/components/ui/spinner";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { UrlDisplay } from "@/components/url-display";
 import { resolveMode } from "@/lib/caas-api-keys";
 import { buildCaaSRequest } from "@/lib/caas-request";
-import { JSONViewerTheme } from "@/lib/json-viewer-config";
 import type {
 	NavServiceFormat,
 	NavServiceOption,
@@ -35,6 +28,7 @@ import type {
 import { buildNavServiceRequest } from "@/lib/nav-service-request";
 import { getService, type Service } from "@/lib/services";
 import { cn } from "@/lib/tw-utils";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import {
 	getActiveProjectFromState,
 	isCaaSConfigStoreInitialized,
@@ -53,18 +47,13 @@ export const Route = createFileRoute("/app/_app/")({
 	component: RouteComponent,
 });
 
-type ServiceResult = {
-	url: string;
-	// biome-ignore lint/suspicious/noExplicitAny: arbitrary JSON response
-	data: any;
-	status: string;
-	durationMs: number;
-};
-
 const emptyResults: Record<Service, ServiceResult | null> = {
 	caas: null,
 	"navigation-service": null,
 };
+
+// Free-text inputs only trigger an automatic re-run once typing has paused.
+const TEXT_INPUT_DEBOUNCE_MS = 500;
 
 function RouteComponent() {
 	const { t } = useTranslation();
@@ -93,10 +82,29 @@ function RouteComponent() {
 	const [isExecuting, setIsExecuting] = useState(false);
 	const [jsonView, setJsonView] = useState<JsonView>("tree");
 
+	// Only the latest request may update the view; older ones are aborted.
+	const requestIdRef = useRef(0);
+	const abortControllerRef = useRef<AbortController | null>(null);
+
+	const debouncedNavServiceDepth = useDebouncedValue(
+		navServiceDepth,
+		TEXT_INPUT_DEBOUNCE_MS,
+	);
+	const debouncedNavServiceRoute = useDebouncedValue(
+		navServiceRoute,
+		TEXT_INPUT_DEBOUNCE_MS,
+	);
+	const debouncedNavServiceId = useDebouncedValue(
+		navServiceId,
+		TEXT_INPUT_DEBOUNCE_MS,
+	);
+
 	const {
 		register,
 		handleSubmit,
 		setValue,
+		getValues,
+		reset,
 		watch,
 		formState: { errors },
 	} = useForm<AppFormData>({
@@ -109,16 +117,30 @@ function RouteComponent() {
 	const service = getService(selectedService);
 	const result = results[selectedService];
 
+	function cancelPendingRequest() {
+		requestIdRef.current += 1;
+		abortControllerRef.current?.abort();
+		abortControllerRef.current = null;
+		setIsExecuting(false);
+	}
+
 	useEffect(() => {
 		isCaaSConfigStoreInitialized()
 			? navigate({ to: "/app" })
 			: navigate({ to: "/setup" });
 	}, [navigate]);
 
+	// Abort a running request when the page is left.
+	useEffect(() => () => abortControllerRef.current?.abort(), []);
+
+	// Filters, ids and routes belong to a project, so start fresh on a project switch.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: We need the customer props as trigger
 	useEffect(() => {
+		cancelPendingRequest();
 		setResults(emptyResults);
-		setValue("page", DEFAULT_PAGE);
+		reset({ page: DEFAULT_PAGE, pagesize: getValues("pagesize") });
+		setNavServiceRoute("");
+		setNavServiceId("");
 		setPageInfos({ totalPages: 0, currentPage: 1 });
 	}, [
 		activeSelection?.customerName,
@@ -144,7 +166,7 @@ function RouteComponent() {
 
 	// Re-run the request of the selected API when its parameters change,
 	// but only once it has been executed manually.
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <>
+	// biome-ignore lint/correctness/useExhaustiveDependencies: onSubmit reads the latest values itself
 	useEffect(() => {
 		if (!results[selectedService]) return;
 		handleSubmit(onSubmit)();
@@ -156,22 +178,24 @@ function RouteComponent() {
 		count,
 		navServiceOption,
 		navServiceFormat,
-		navServiceDepth,
-		navServiceRoute,
-		navServiceId,
+		debouncedNavServiceDepth,
+		debouncedNavServiceRoute,
+		debouncedNavServiceId,
 		handleSubmit,
 	]);
 
-	async function onSubmit(data: AppFormData) {
+	/** Runs the request; resolves to false only if it failed, not if a newer request replaced it. */
+	async function onSubmit(data: AppFormData): Promise<boolean> {
 		const requestService = selectedService;
 		let url: string;
-		let caasApiKey: string | undefined;
+		// The CaaS key of the current mode is also sent to the navigation service: it is
+		// ignored by default, but a server can be configured to require it.
+		const caasApiKey = projectSettings?.caasApiKeys[mode];
 
 		if (requestService === "caas") {
-			caasApiKey = projectSettings?.caasApiKeys[mode];
 			if (!projectSettings?.caasUrl || !caasApiKey) {
 				toast.error(t("app.form.error.missingUrl"));
-				return;
+				return false;
 			}
 			url = buildCaaSRequest(projectSettings.caasUrl, mode, locale, data, {
 				np,
@@ -189,9 +213,18 @@ function RouteComponent() {
 				navServiceRoute,
 				navServiceId,
 			);
-			if (!requestUrl) return;
+			if (!requestUrl) {
+				toast.error(t("app.form.error.missingNavServiceUrl"));
+				return false;
+			}
 			url = requestUrl;
 		}
+
+		cancelPendingRequest();
+		const requestId = requestIdRef.current;
+		const controller = new AbortController();
+		abortControllerRef.current = controller;
+		const isLatest = () => requestIdRef.current === requestId;
 
 		setIsExecuting(true);
 		const startedAt = performance.now();
@@ -201,7 +234,9 @@ function RouteComponent() {
 				headers: caasApiKey
 					? { Authorization: `Bearer ${caasApiKey}` }
 					: undefined,
+				signal: controller.signal,
 			});
+			if (!isLatest()) return true;
 
 			if (!response.ok) {
 				toast.error(
@@ -210,10 +245,11 @@ function RouteComponent() {
 						statusText: response.statusText,
 					}),
 				);
-				return;
+				return false;
 			}
 
 			const resData = await response.json();
+			if (!isLatest()) return true;
 
 			if (requestService === "caas") {
 				setPageInfos({
@@ -230,13 +266,20 @@ function RouteComponent() {
 					durationMs: Math.round(performance.now() - startedAt),
 				},
 			}));
+			return true;
 		} catch {
+			if (!isLatest()) return true;
 			toast.error(t("app.form.error.networkError"));
+			return false;
 		} finally {
-			setIsExecuting(false);
+			if (isLatest()) {
+				abortControllerRef.current = null;
+				setIsExecuting(false);
+			}
 		}
 	}
 
+	// The shown page number only changes once the new page has loaded.
 	function paginate(direction: "next" | "previous") {
 		const { currentPage, totalPages } = pageInfos;
 		const nextPage =
@@ -246,8 +289,10 @@ function RouteComponent() {
 		if (nextPage === currentPage) return;
 
 		setValue("page", nextPage, { shouldValidate: true });
-		setPageInfos((prev) => ({ ...prev, currentPage: nextPage }));
-		handleSubmit(onSubmit)();
+		handleSubmit(async (data) => {
+			const succeeded = await onSubmit(data);
+			if (!succeeded) setValue("page", currentPage, { shouldValidate: true });
+		})();
 	}
 
 	async function onCopyUrl() {
@@ -261,37 +306,6 @@ function RouteComponent() {
 		} catch {
 			toast.error(t("app.form.copyUrlToClipboardBtn.error"));
 		}
-	}
-
-	async function onCopyJson() {
-		if (!result) {
-			toast.error(t("app.form.copyJsonToClipboardBtn.error"));
-			return;
-		}
-		try {
-			await navigator.clipboard.writeText(JSON.stringify(result.data, null, 2));
-			toast.success(t("app.form.copyJsonToClipboardBtn.success"));
-		} catch {
-			toast.error(t("app.form.copyJsonToClipboardBtn.error"));
-		}
-	}
-
-	function resultSummary(): string | null {
-		const data = result?.data;
-		if (!data) return null;
-		if (selectedService === "caas" && typeof data._size === "number") {
-			return t("app.response.caasSummary", {
-				total: data._size,
-				returned: data._returned ?? 0,
-			});
-		}
-		if (
-			selectedService === "navigation-service" &&
-			Array.isArray(data.children)
-		) {
-			return t("app.response.navSummary", { count: data.children.length });
-		}
-		return null;
 	}
 
 	const formPanel = (
@@ -378,101 +392,15 @@ function RouteComponent() {
 		</div>
 	);
 
-	const summary = resultSummary();
-
 	const responsePanel = (
-		<div className="flex h-full flex-col gap-2 overflow-hidden p-2">
-			<div
-				className={cn(
-					"flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border-t-6",
-					service.panelBorderClass,
-				)}
-				style={{ backgroundColor: JSONViewerTheme.base00 }}
-			>
-				{result ? (
-					<>
-						<div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-2.5 text-sm text-neutral-300">
-							<div className="flex flex-wrap items-center gap-3.5">
-								<span className="rounded bg-green-950 px-2 py-0.5 font-semibold text-green-300">
-									{result.status}
-								</span>
-								<span>
-									{t("app.response.duration", { ms: result.durationMs })}
-								</span>
-								{summary && <span>{summary}</span>}
-							</div>
-							<div className="flex items-center gap-2">
-								<div
-									role="tablist"
-									aria-label={t("app.json.view.label")}
-									className="flex gap-1 rounded-lg bg-black/25 p-1"
-								>
-									{(["tree", "raw"] as const).map((view) => (
-										<button
-											key={view}
-											type="button"
-											role="tab"
-											aria-selected={jsonView === view}
-											onClick={() => setJsonView(view)}
-											className={cn(
-												"h-8 rounded-md px-3.5 text-sm transition-colors",
-												jsonView === view
-													? "bg-white/15 font-semibold text-white"
-													: "font-medium text-neutral-300 hover:text-white",
-											)}
-										>
-											{t(`app.json.view.${view}`)}
-										</button>
-									))}
-								</div>
-								<Tooltip>
-									<TooltipTrigger
-										render={
-											<button
-												type="button"
-												onClick={onCopyJson}
-												className="flex size-10 items-center justify-center rounded-md text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
-												aria-label={t("app.form.copyJsonToClipboardBtn.label")}
-											/>
-										}
-									>
-										<Icon icon="clipboard" className="size-5" />
-									</TooltipTrigger>
-									<TooltipContent className="max-w-64">
-										<p>{t("app.form.copyJsonToClipboardBtn.label")}</p>
-									</TooltipContent>
-								</Tooltip>
-							</div>
-						</div>
-						<JSONViewer
-							json={result.data}
-							view={jsonView}
-							className="flex-1 overflow-y-scroll no-scrollbar rounded-none px-5 py-3"
-						/>
-					</>
-				) : (
-					<div className="flex flex-1 flex-col items-center justify-center gap-2.5 p-6 text-center text-neutral-400">
-						<ArrowRight
-							className="size-10 text-neutral-500"
-							strokeWidth={1.5}
-						/>
-						<span className="text-base font-medium text-neutral-200">
-							{t("app.response.emptyTitle", { api: service.label })}
-						</span>
-						<span className="text-sm">{t("app.response.emptyHint")}</span>
-					</div>
-				)}
-			</div>
-			{selectedService === "caas" && result && pageInfos.totalPages > 1 && (
-				<div className="shrink-0">
-					<PaginationControls
-						pageInfos={pageInfos}
-						onPrevious={() => paginate("previous")}
-						onNext={() => paginate("next")}
-					/>
-				</div>
-			)}
-		</div>
+		<ResponsePanel
+			selectedService={selectedService}
+			result={result}
+			pageInfos={pageInfos}
+			onPaginate={paginate}
+			jsonView={jsonView}
+			onJsonViewChange={setJsonView}
+		/>
 	);
 
 	return (

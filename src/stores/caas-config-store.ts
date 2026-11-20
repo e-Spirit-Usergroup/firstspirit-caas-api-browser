@@ -2,6 +2,10 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { normalizeCaasApiKeys } from "@/lib/caas-api-keys";
 import { normalizeCaasUrlForStorage } from "@/lib/caas-url";
+import {
+	inferNavServiceUrl,
+	resolveNavServiceUrl,
+} from "@/lib/nav-service-url";
 import type { StageType } from "@/types/stage";
 import type {
 	ActiveProjectSelection,
@@ -11,7 +15,6 @@ import type {
 	ProjectConfig,
 	ProjectSetupData,
 } from "../types/configuration";
-import { inferNavServiceUrl } from "@/lib/config-import";
 
 const createEmptyStages = (): CustomerConfig["stages"] => ({
 	dev: [],
@@ -151,6 +154,15 @@ const migrateLegacyApiKey = (project: ProjectConfig): ProjectConfig => {
 	};
 };
 
+// Projects saved before v4 have no navigation service URL; derive it from the CaaS URL.
+const migrateNavServiceUrl = (project: ProjectConfig): ProjectConfig => ({
+	...project,
+	navigationServiceUrl: resolveNavServiceUrl(
+		project.navigationServiceUrl,
+		project.caasUrl,
+	),
+});
+
 export type CaaSConfigStore = {
 	customers: CustomerConfig[];
 	activeSelection: ActiveProjectSelection | null;
@@ -164,6 +176,7 @@ export type CaaSConfigStore = {
 		stage: StageType;
 		projectName: string;
 		caasApiKeys: CaasApiKeys;
+		navigationServiceUrl?: string;
 	}) => void;
 	setActiveCustomer: (customerName: string) => void;
 	setActiveStage: (stage: StageType) => void;
@@ -232,7 +245,10 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 						caasUrl: normalizeCaasUrlForStorage(projectSetupData.caasUrl),
 						databaseSchemas: previousProject?.databaseSchemas ?? null,
 						locales: previousProject?.locales ?? [],
-						navigationServiceUrl: inferNavServiceUrl(projectSetupData.caasUrl),
+						navigationServiceUrl: resolveNavServiceUrl(
+							projectSetupData.navigationServiceUrl,
+							projectSetupData.caasUrl,
+						),
 					};
 					if (existingProjectIndex >= 0) {
 						nextStageProjects[existingProjectIndex] = nextProject;
@@ -257,7 +273,13 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 						}),
 					};
 				}),
-			setProjectApiKeys: ({ customerName, stage, projectName, caasApiKeys }) =>
+			setProjectApiKeys: ({
+				customerName,
+				stage,
+				projectName,
+				caasApiKeys,
+				navigationServiceUrl,
+			}) =>
 				set((state) => {
 					const customers = state.customers.map((customer) => {
 						if (customer.customerName !== customerName) {
@@ -265,7 +287,17 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 						}
 						const stageProjects = customer.stages[stage].map((project) =>
 							project.projectName === projectName
-								? { ...project, caasApiKeys: normalizeCaasApiKeys(caasApiKeys) }
+								? {
+										...project,
+										caasApiKeys: normalizeCaasApiKeys(caasApiKeys),
+										navigationServiceUrl:
+											navigationServiceUrl === undefined
+												? project.navigationServiceUrl
+												: resolveNavServiceUrl(
+														navigationServiceUrl,
+														project.caasUrl,
+													),
+									}
 								: project,
 						);
 						return {
@@ -447,7 +479,7 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 		}),
 		{
 			name: "caas-config-store",
-			version: 3,
+			version: 4,
 			partialize: (state) => ({
 				customers: state.customers,
 				activeSelection: state.activeSelection,
@@ -468,10 +500,13 @@ export const useCaaSConfigStore = create<CaaSConfigStore>()(
 				if (!Array.isArray(state.customers)) {
 					return { customers: [], activeSelection: null };
 				}
-				const customers =
-					version < 3
-						? mapCustomerProjects(state.customers, migrateLegacyApiKey)
-						: state.customers;
+				let customers = state.customers;
+				if (version < 3) {
+					customers = mapCustomerProjects(customers, migrateLegacyApiKey);
+				}
+				if (version < 4) {
+					customers = mapCustomerProjects(customers, migrateNavServiceUrl);
+				}
 				return {
 					...state,
 					customers: normalizeCustomers(customers),

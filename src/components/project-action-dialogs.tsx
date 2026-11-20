@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { SaveSelectedProjectsToJson } from "@/lib/config";
+import {
+	MIN_EXPORT_PASSWORD_LENGTH,
+	SaveSelectedProjectsToJson,
+} from "@/lib/config";
 import type { ProjectConfig } from "@/types/configuration";
 import { stageOptionTexts, type stageTypes } from "@/types/stage";
 import type { ProjectRow } from "./projects-table";
@@ -118,14 +121,18 @@ function ExportProjectsDialog({
 	const { t } = useTranslation();
 	const [exportPassword, setExportPassword] = useState("");
 	const [isExporting, setIsExporting] = useState(false);
+	const passwordHintId = useId();
 
 	const handleOpenChange = (nextOpen: boolean) => {
 		onOpenChange(nextOpen);
 		if (!nextOpen) setExportPassword("");
 	};
 
+	const isPasswordTooShort =
+		exportPassword.trim().length < MIN_EXPORT_PASSWORD_LENGTH;
+
 	const exportSelectedProjects = async () => {
-		if (!exportPassword.trim()) return;
+		if (isPasswordTooShort) return;
 
 		const customerMap = new Map<
 			string,
@@ -177,7 +184,13 @@ function ExportProjectsDialog({
 					placeholder={t(
 						"app.settings.manageProjects.exportPasswordPlaceholder",
 					)}
+					aria-describedby={passwordHintId}
 				/>
+				<p id={passwordHintId} className="text-muted-foreground text-xs">
+					{t("app.settings.manageProjects.exportPasswordMinLength", {
+						count: MIN_EXPORT_PASSWORD_LENGTH,
+					})}
+				</p>
 				<AlertDialogFooter>
 					<AlertDialogCancel disabled={isExporting}>
 						{t("app.settings.manageProjects.cancel")}
@@ -187,7 +200,7 @@ function ExportProjectsDialog({
 							event.preventDefault();
 							void exportSelectedProjects();
 						}}
-						disabled={!exportPassword.trim() || isExporting}
+						disabled={isPasswordTooShort || isExporting}
 					>
 						{t("app.settings.manageProjects.exportConfirm")}
 					</AlertDialogAction>

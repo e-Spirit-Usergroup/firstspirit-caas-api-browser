@@ -52,7 +52,8 @@
 						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "Dieses Feld ist erforderlich",
-							"stageNotDetected": "Die Stage konnte nicht erkannt werden. Der URL-Pfad muss mit /KUNDE-STAGE/ beginnen (z. B. /example-dev/)."
+							"stageNotDetected": "Die Stage konnte nicht erkannt werden. Der URL-Pfad muss mit /KUNDE-STAGE/ beginnen (z. B. /example-dev/).",
+							"projectNotDetected": "Die URL muss mit dem Projektsegment enden, z. B. /<projectId>.preview.content."
 						}
 					},
 					"submitBtn": "Speichern",
@@ -77,6 +78,13 @@
 							"status403": "Fehler 403 | Möglicherweise falsche Inhaltsmodus",
 							"status404": "Fehler 404| Möglicherweise falsche Projekt-ID",
 							"statusError": "Fehler | Möglicherweise falsche URL"
+						}
+					},
+					"navServiceUrl": {
+						"label": "Navigation Service URL (optional)",
+						"hint": "Leer lassen, um sie aus der CaaS URL abzuleiten.",
+						"validation": {
+							"invalidUrl": "Bitte geben Sie eine gültige URL ein"
 						}
 					}
 				}
@@ -105,7 +113,9 @@
 				"passwordPlaceholder": "Entschlüsselungs-Passwort eingeben",
 				"cancel": "Abbrechen",
 				"confirm": "Entschlüsseln und importieren"
-			}
+			},
+			"fileTooLarge": "Die Datei ist zu groß (max. {{maxSize}} MB).",
+			"noFileSelected": "Bitte wählen Sie zuerst eine Konfigurationsdatei aus."
 		}
 	},
 	"app": {
@@ -172,7 +182,8 @@
 			"error": {
 				"missingUrl": "CaaS URL ist nicht konfiguriert",
 				"requestFailed": "Anfrage fehlgeschlagen: {{status}} {{statusText}}",
-				"networkError": "Netzwerkfehler aufgetreten. Bitte überprüfen Sie Ihre Verbindung."
+				"networkError": "Netzwerkfehler aufgetreten. Bitte überprüfen Sie Ihre Verbindung.",
+				"missingNavServiceUrl": "Navigation Service URL ist nicht konfiguriert. Sie kann unter Projekte verwalten gesetzt werden."
 			}
 		},
 		"pagination": {
@@ -263,7 +274,10 @@
 				"addNewProject": "Neues Projekt hinzufügen",
 				"emptyState": "Noch keine Projekte konfiguriert.",
 				"confirmRemove": "Projekt '{{projectName}}' aus {{customerName}} ({{stage}}) entfernen?",
-				"confirmRemoveSelected": "{{count}} ausgewahlte(s) Projekt(e) entfernen?"
+				"confirmRemoveSelected": "{{count}} ausgewahlte(s) Projekt(e) entfernen?",
+				"editProject": "Projekt bearbeiten",
+				"projectUpdated": "'{{projectName}}' aktualisiert",
+				"exportPasswordMinLength": "Mindestens {{count}} Zeichen verwenden."
 			},
 			"executeRequest": "Ausführen"
 		},

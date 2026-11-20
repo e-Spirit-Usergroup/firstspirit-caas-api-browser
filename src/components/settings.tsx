@@ -7,7 +7,7 @@ import {
 } from "@/stores/caas-config-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { type ModeType, modeTypes } from "@/types/mode";
-import type { StageType } from "@/types/stage";
+import { type StageType, stageTypes } from "@/types/stage";
 import Icon from "./icons/icon";
 import ManageProjectsDialog from "./manage-projects-dialog";
 import { ProjectSettingsSection } from "./project-settings-section";
@@ -26,12 +26,7 @@ import { UpdateSection } from "./update-section";
 function Settings() {
 	const { t } = useTranslation();
 
-	const {
-		locale,
-		setLocale,
-		mode,
-		setMode,
-	} = useSettingsStore();
+	const { locale, setLocale, mode, setMode } = useSettingsStore();
 
 	const {
 		customers,
@@ -101,8 +96,11 @@ function Settings() {
 		: (localAvailableModes[0] ?? localMode);
 
 	const handleCustomerChange = (value: string) => {
+		const customer = customers.find((item) => item.customerName === value);
+		const firstStage =
+			stageTypes.find((stage) => customer?.stages[stage].length) ?? "dev";
 		setLocalCustomerName(value);
-		setLocalStage("dev");
+		setLocalStage(firstStage);
 		setLocalProjectName("");
 	};
 

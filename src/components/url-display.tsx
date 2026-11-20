@@ -11,15 +11,23 @@ type UrlDisplayProps = {
 	onCopy: () => void;
 };
 
+function safeDecode(value: string): string {
+	try {
+		return decodeURIComponent(value);
+	} catch {
+		return value;
+	}
+}
+
 function splitUrl(url: string) {
 	try {
 		const parsed = new URL(url);
 		return {
-			base: decodeURIComponent(`${parsed.origin}${parsed.pathname}`),
+			base: safeDecode(`${parsed.origin}${parsed.pathname}`),
 			params: [...parsed.searchParams.entries()],
 		};
 	} catch {
-		return { base: decodeURIComponent(url), params: [] };
+		return { base: safeDecode(url), params: [] };
 	}
 }
 

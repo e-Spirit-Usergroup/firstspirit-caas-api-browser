@@ -26,6 +26,9 @@ export const Route = createFileRoute("/setup/_setup/file-upload")({
 	component: RouteComponent,
 });
 
+// Config exports are a few KB; anything far larger is not a config file.
+const MAX_CONFIG_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
 function RouteComponent() {
 	const { t } = useTranslation();
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -83,6 +86,18 @@ function RouteComponent() {
 	};
 
 	const saveConfigToStore = () => {
+		if (!selectedFile) {
+			toast.error(t("setup.fileUpload.noFileSelected"));
+			return;
+		}
+		if (selectedFile.size > MAX_CONFIG_FILE_SIZE_BYTES) {
+			toast.error(
+				t("setup.fileUpload.fileTooLarge", {
+					maxSize: MAX_CONFIG_FILE_SIZE_BYTES / 1024 / 1024,
+				}),
+			);
+			return;
+		}
 		const reader = new FileReader();
 		reader.onload = async () => {
 			try {
@@ -100,7 +115,7 @@ function RouteComponent() {
 		reader.onerror = () => {
 			toast.error(t("setup.fileUpload.fileReadError"));
 		};
-		reader.readAsText(selectedFile as Blob);
+		reader.readAsText(selectedFile);
 	};
 
 	const saveEncryptedConfigToStore = async () => {
@@ -146,6 +161,7 @@ function RouteComponent() {
 				<Button
 					type="button"
 					variant="default"
+					disabled={!selectedFile}
 					onClick={() => saveConfigToStore()}
 				>
 					{t("setup.fileUpload.submitBtn")}

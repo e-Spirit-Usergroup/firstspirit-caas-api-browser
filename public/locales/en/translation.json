@@ -52,7 +52,8 @@
 						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "This field is required",
-							"stageNotDetected": "Could not detect the stage. The URL path must start with /CUSTOMER-STAGE/ (e.g. /example-dev/)."
+							"stageNotDetected": "Could not detect the stage. The URL path must start with /CUSTOMER-STAGE/ (e.g. /example-dev/).",
+							"projectNotDetected": "The URL must end with the project segment, e.g. /<projectId>.preview.content."
 						}
 					},
 					"submitBtn": "Submit",
@@ -77,6 +78,13 @@
 							"status403": "Error 403 | Probably wrong content mode",
 							"status404": "Error 404| Probably wrong project ID",
 							"statusError": "Error | Probably wrong URL"
+						}
+					},
+					"navServiceUrl": {
+						"label": "Navigation service URL (optional)",
+						"hint": "Leave empty to derive it from the CaaS URL.",
+						"validation": {
+							"invalidUrl": "Please enter a valid URL"
 						}
 					}
 				}
@@ -105,7 +113,9 @@
 				"passwordPlaceholder": "Enter decryption password",
 				"cancel": "Cancel",
 				"confirm": "Decrypt and import"
-			}
+			},
+			"fileTooLarge": "The file is too large (max. {{maxSize}} MB).",
+			"noFileSelected": "Please select a configuration file first."
 		}
 	},
 	"app": {
@@ -172,7 +182,8 @@
 			"error": {
 				"missingUrl": "CaaS URL is not configured",
 				"requestFailed": "Request failed: {{status}} {{statusText}}",
-				"networkError": "Network error occurred. Please check your connection."
+				"networkError": "Network error occurred. Please check your connection.",
+				"missingNavServiceUrl": "Navigation service URL is not configured. Set it under Manage projects."
 			}
 		},
 		"pagination": {
@@ -263,7 +274,10 @@
 				"addNewProject": "Add new project",
 				"emptyState": "No projects configured yet.",
 				"confirmRemove": "Remove project '{{projectName}}' from {{customerName}} ({{stage}})?",
-				"confirmRemoveSelected": "Remove {{count}} selected project(s)?"
+				"confirmRemoveSelected": "Remove {{count}} selected project(s)?",
+				"editProject": "Edit project",
+				"projectUpdated": "Updated '{{projectName}}'",
+				"exportPasswordMinLength": "Use at least {{count}} characters."
 			},
 			"executeRequest": "Execute"
 		},
