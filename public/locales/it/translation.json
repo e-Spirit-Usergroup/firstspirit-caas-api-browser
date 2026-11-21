@@ -215,13 +215,9 @@
 				},
 				"queryParams": {
 					"label": "Parametri di query",
-					"np": {
-						"label": "np",
-						"tooltip": "Impostando il parametro di query np senza alcun valore, la collection restituita non conterrà metadati della collection."
-					},
-					"repPj": {
-						"label": "rep pj",
-						"tooltip": "Impostando il parametro di query rep su pj verrà creata una risposta JSON semplice senza metadati. Questo rimuove qualsiasi informazione sul numero di elementi o di pagine nella risposta e di conseguenza interrompe la paginazione."
+					"repS": {
+						"label": "rep s",
+						"tooltip": "representation=standard: Restituisce l'array degli oggetti di risposta senza metadati. Vengono rimossi anche i dati di count, di conseguenza la paginazione non funziona più"
 					},
 					"count": {
 						"label": "count",

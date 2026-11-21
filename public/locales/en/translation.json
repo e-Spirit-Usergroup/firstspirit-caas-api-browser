@@ -215,13 +215,9 @@
 				},
 				"queryParams": {
 					"label": "Query Parameter",
-					"np": {
-						"label": "np",
-						"tooltip": "By setting the np query param without any value, the returned collection will not include any collection metadata"
-					},
-					"repPj": {
-						"label": "rep pj",
-						"tooltip": "Setting the rep query param to pj will create a plain JSON response without any metadata. This removes any information about the number of elements or pages in the response and therefore breaks the pagination."
+					"repS": {
+						"label": "rep s",
+						"tooltip": "representation=standard: Returns the array of response objects without any metadata. Count data is also removed, so this breaks the pagination"
 					},
 					"count": {
 						"label": "count",

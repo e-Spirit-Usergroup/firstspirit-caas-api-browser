@@ -7,8 +7,6 @@ interface SettingsState {
 	setLocale: (locale: string | null) => void;
 	mode: ModeType;
 	setMode: (mode: ModeType) => void;
-	np: boolean;
-	setNp: (np: boolean) => void;
 	rep: boolean;
 	setRep: (rep: boolean) => void;
 	count: boolean;
@@ -23,8 +21,6 @@ export const useSettingsStore = create<SettingsState>()(
 			setLocale: (locale) => set({ locale }),
 			mode: "preview",
 			setMode: (mode) => set({ mode }),
-			np: true,
-			setNp: (np) => set({ np }),
 			rep: false,
 			setRep: (rep) => set({ rep }),
 			count: true,
@@ -33,7 +29,6 @@ export const useSettingsStore = create<SettingsState>()(
 				set({
 					locale: null,
 					mode: "preview",
-					np: true,
 					rep: false,
 					count: true,
 				}),

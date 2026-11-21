@@ -50,7 +50,6 @@ function CaaSParameters({
 	const pageSizeId = useId();
 	const filterSelectId = useId();
 	const selectNameOrIdentifierId = useId();
-	const npId = useId();
 	const repId = useId();
 	const countId = useId();
 	const filterType = watch("filterType");
@@ -59,7 +58,7 @@ function CaaSParameters({
 	const useNameOrIdentifier = watch("useNameOrIdentifier");
 	const isPageDefault = watch("page") === DEFAULT_PAGE;
 	const isPageSizeDefault = watch("pagesize") === DEFAULT_PAGE_SIZE;
-	const { np, setNp, rep, setRep, count, setCount } = useSettingsStore();
+	const { rep, setRep, count, setCount } = useSettingsStore();
 
 	return (
 		<>
@@ -133,22 +132,13 @@ function CaaSParameters({
 				</h2>
 				<div className="flex flex-wrap items-center gap-x-8 gap-y-3">
 					<CheckboxFieldWithTooltip
-						id={npId}
-						label={t("app.settings.dialog.queryParams.np.label")}
-						checked={np}
-						onCheckedChange={setNp}
-						tooltipIcon="information-circle"
-						tooltipIconColor="text-blue-500"
-						tooltipText={t("app.settings.dialog.queryParams.np.tooltip")}
-					/>
-					<CheckboxFieldWithTooltip
 						id={repId}
-						label={t("app.settings.dialog.queryParams.repPj.label")}
+						label={t("app.settings.dialog.queryParams.repS.label")}
 						checked={rep}
 						onCheckedChange={setRep}
 						tooltipIcon="exclamation-triangle"
 						tooltipIconColor="text-orange-500"
-						tooltipText={t("app.settings.dialog.queryParams.repPj.tooltip")}
+						tooltipText={t("app.settings.dialog.queryParams.repS.tooltip")}
 					/>
 					<CheckboxFieldWithTooltip
 						id={countId}

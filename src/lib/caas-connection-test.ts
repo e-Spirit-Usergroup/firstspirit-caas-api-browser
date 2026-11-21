@@ -19,8 +19,7 @@ export async function testCaaSConnection(
 		const url = new URL(caasUrl);
 		const searchParams = new URLSearchParams();
 		searchParams.append("filter", '{"_id": ""}');
-		searchParams.append("np", "");
-		searchParams.append("rep", "pj");
+		searchParams.append("rep", "s");
 		url.search = searchParams.toString();
 
 		const response = await fetch(url.toString(), {

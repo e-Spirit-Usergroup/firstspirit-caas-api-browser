@@ -215,13 +215,9 @@
 				},
 				"queryParams": {
 					"label": "Query Parameter",
-					"np": {
-						"label": "np",
-						"tooltip": "Wenn der np-Query-Parameter ohne Wert gesetzt wird, enthält die zurückgegebene Collection keine Metadaten zur Collection."
-					},
-					"repPj": {
-						"label": "rep pj",
-						"tooltip": "Wenn der rep-Query-Parameter auf pj gesetzt wird, wird eine reine JSON-Antwort ohne Metadaten erzeugt. Dadurch entfallen Informationen über die Anzahl der Elemente oder Seiten in der Antwort und die Paginierung funktioniert nicht mehr."
+					"repS": {
+						"label": "rep s",
+						"tooltip": "representation=standard: Gibt das Array der Antwortobjekte ohne Metadaten zurück. Auch die Count-Daten entfallen, wodurch die Paginierung nicht mehr funktioniert"
 					},
 					"count": {
 						"label": "count",

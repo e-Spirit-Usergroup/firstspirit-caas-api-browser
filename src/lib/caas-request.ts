@@ -7,7 +7,6 @@ import {
 import type { ModeType } from "@/types/mode";
 
 type CaaSRequestFlags = {
-	np: boolean;
 	rep: boolean;
 	count: boolean;
 };
@@ -23,9 +22,8 @@ export function buildCaaSRequest(
 	const url = new URL(modeAwareCaasUrl);
 	const searchParams = new URLSearchParams();
 
-	if (flags.np) searchParams.append("np", "");
 	if (flags.count) searchParams.append("count", "");
-	if (flags.rep) searchParams.append("rep", "pj");
+	if (flags.rep) searchParams.append("rep", "s");
 
 	// Only send paging parameters that differ from the CaaS defaults
 	if (data.page != null && data.page !== DEFAULT_PAGE) {

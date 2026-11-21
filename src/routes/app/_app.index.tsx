@@ -110,7 +110,7 @@ function RouteComponent() {
 	} = useForm<AppFormData>({
 		defaultValues: { page: DEFAULT_PAGE, pagesize: DEFAULT_PAGE_SIZE },
 	});
-	const { locale, setLocale, mode, setMode, np, rep, count } =
+	const { locale, setLocale, mode, setMode, rep, count } =
 		useSettingsStore();
 	const navigate = useNavigate();
 
@@ -173,7 +173,6 @@ function RouteComponent() {
 	}, [
 		mode,
 		locale,
-		np,
 		rep,
 		count,
 		navServiceOption,
@@ -198,7 +197,6 @@ function RouteComponent() {
 				return false;
 			}
 			url = buildCaaSRequest(projectSettings.caasUrl, mode, locale, data, {
-				np,
 				rep,
 				count,
 			});
