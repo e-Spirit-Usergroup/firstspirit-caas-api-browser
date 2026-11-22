@@ -52,7 +52,8 @@
 						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "Dieses Feld ist erforderlich",
-							"stageNotDetected": "Die Stage konnte nicht erkannt werden. Der URL-Pfad muss mit /KUNDE-STAGE/ beginnen (z. B. /example-dev/)."
+							"stageNotDetected": "Die Stage konnte nicht erkannt werden. Der URL-Pfad muss mit /KUNDE-STAGE/ beginnen (z. B. /example-dev/).",
+							"projectNotDetected": "Die URL muss mit dem Projektsegment enden, z. B. /<projectId>.preview.content."
 						}
 					},
 					"submitBtn": "Speichern",
@@ -77,6 +78,13 @@
 							"status403": "Fehler 403 | Möglicherweise falsche Inhaltsmodus",
 							"status404": "Fehler 404| Möglicherweise falsche Projekt-ID",
 							"statusError": "Fehler | Möglicherweise falsche URL"
+						}
+					},
+					"navServiceUrl": {
+						"label": "Navigation Service URL (optional)",
+						"hint": "Leer lassen, um sie aus der CaaS URL abzuleiten.",
+						"validation": {
+							"invalidUrl": "Bitte geben Sie eine gültige URL ein"
 						}
 					}
 				}
@@ -105,7 +113,9 @@
 				"passwordPlaceholder": "Entschlüsselungs-Passwort eingeben",
 				"cancel": "Abbrechen",
 				"confirm": "Entschlüsseln und importieren"
-			}
+			},
+			"fileTooLarge": "Die Datei ist zu groß (max. {{maxSize}} MB).",
+			"noFileSelected": "Bitte wählen Sie zuerst eine Konfigurationsdatei aus."
 		}
 	},
 	"app": {
@@ -115,6 +125,28 @@
 			"project": "Projekt",
 			"decodedUrl": "Dekodierte URL",
 			"noUrlToDisplay": "Keine URL zum Anzeigen",
+			"pagination": {
+				"page": "Seite",
+				"pageError": "Bitte eine ganze Zahl ab 1 eingeben",
+				"pageSize": "Seitengröße",
+				"pageSizeError": "Bitte eine ganze Zahl zwischen 1 und {{max}} eingeben"
+			},
+			"service": {
+				"label": "API",
+				"caasParameters": "CaaS-Parameter",
+				"navParameters": "Navigation-Parameter"
+			},
+			"navigationService": {
+				"fullNavigation": "Vollständige Navigation",
+				"bySeoRoute": "Nach SEO-Route",
+				"byId": "Nach ID",
+				"queryType": "Abfrageart",
+				"format": "Format",
+				"depth": "Tiefe",
+				"allLevels": "alle Ebenen",
+				"route": "Route",
+				"id": "ID"
+			},
 			"copyUrlToClipboardBtn": {
 				"label": "URL in die Zwischenablage kopieren",
 				"success": "URL in die Zwischenablage kopiert",
@@ -150,13 +182,23 @@
 			"error": {
 				"missingUrl": "CaaS URL ist nicht konfiguriert",
 				"requestFailed": "Anfrage fehlgeschlagen: {{status}} {{statusText}}",
-				"networkError": "Netzwerkfehler aufgetreten. Bitte überprüfen Sie Ihre Verbindung."
+				"networkError": "Netzwerkfehler aufgetreten. Bitte überprüfen Sie Ihre Verbindung.",
+				"missingNavServiceUrl": "Navigation Service URL ist nicht konfiguriert. Sie kann unter Projekte verwalten gesetzt werden.",
+				"missingNavServiceRoute": "Bitte eine Route für die Abfrage „by SEO route“ eingeben.",
+				"missingNavServiceId": "Bitte eine ID für die Abfrage „by ID“ eingeben."
 			}
 		},
 		"pagination": {
 			"previous": "Zurück",
 			"next": "Weiter",
 			"pageXOfY": "Seite {{x}} von {{y}}"
+		},
+		"response": {
+			"emptyTitle": "Noch keine {{api}}-Antwort",
+			"emptyHint": "Parameter wählen und „Ausführen“ klicken",
+			"duration": "{{ms}} ms",
+			"caasSummary": "{{total}} Dokumente · {{returned}} auf dieser Seite",
+			"navSummary": "{{count}} Kinder"
 		},
 		"settings": {
 			"dialog": {
@@ -175,13 +217,9 @@
 				},
 				"queryParams": {
 					"label": "Query Parameter",
-					"np": {
-						"label": "np",
-						"tooltip": "Wenn der np-Query-Parameter ohne Wert gesetzt wird, enthält die zurückgegebene Collection keine Metadaten zur Collection."
-					},
-					"repPj": {
-						"label": "rep pj",
-						"tooltip": "Wenn der rep-Query-Parameter auf pj gesetzt wird, wird eine reine JSON-Antwort ohne Metadaten erzeugt. Dadurch entfallen Informationen über die Anzahl der Elemente oder Seiten in der Antwort und die Paginierung funktioniert nicht mehr."
+					"repS": {
+						"label": "rep s",
+						"tooltip": "representation=standard: Gibt das Array der Antwortobjekte ohne Metadaten zurück. Auch die Count-Daten entfallen, wodurch die Paginierung nicht mehr funktioniert"
 					},
 					"count": {
 						"label": "count",
@@ -234,14 +272,24 @@
 				"addNewProject": "Neues Projekt hinzufügen",
 				"emptyState": "Noch keine Projekte konfiguriert.",
 				"confirmRemove": "Projekt '{{projectName}}' aus {{customerName}} ({{stage}}) entfernen?",
-				"confirmRemoveSelected": "{{count}} ausgewahlte(s) Projekt(e) entfernen?"
+				"confirmRemoveSelected": "{{count}} ausgewahlte(s) Projekt(e) entfernen?",
+				"editProject": "Projekt bearbeiten",
+				"projectUpdated": "'{{projectName}}' aktualisiert",
+				"exportPasswordMinLength": "Mindestens {{count}} Zeichen verwenden."
 			},
 			"executeRequest": "Ausführen"
 		},
 		"json": {
 			"noResponse": "Führe eine Abfrage aus, um eine Antwort zu erhalten",
 			"codeSampleAlt": "Code-Beispiel Illustration",
-			"executeRequest": "Ausführen"
+			"executeRequest": "Ausführen",
+			"preview": "Große Antwort – die ersten {{shown}} von {{total}} Einträgen werden angezeigt",
+			"showAll": "Vollständige Antwort laden",
+			"view": {
+				"label": "Ansicht",
+				"tree": "Baum",
+				"raw": "JSON"
+			}
 		},
 		"common": {
 			"close": "Schließen",

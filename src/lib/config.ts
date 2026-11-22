@@ -2,6 +2,8 @@ import type { CaasApiKeys, CustomerConfig } from "../types/configuration";
 import { modeTypes } from "../types/mode";
 import { encryptCaasApiKey } from "./config-crypto";
 
+export const MIN_EXPORT_PASSWORD_LENGTH = 8;
+
 type ExportConfigPayload = {
 	customers: CustomerConfig[];
 };
@@ -12,6 +14,7 @@ type ExportedProjectConfig = {
 	caasApiUrl: string;
 	databaseSchemas: CustomerConfig["stages"]["dev"][number]["databaseSchemas"];
 	locales: CustomerConfig["stages"]["dev"][number]["locales"];
+	navigationServiceUrl: string;
 };
 
 type ExportedCustomerConfig = {
@@ -41,6 +44,7 @@ const toExportedProject = async (
 		caasApiUrl: project.caasUrl,
 		databaseSchemas: project.databaseSchemas,
 		locales: project.locales,
+		navigationServiceUrl: project.navigationServiceUrl ?? "",
 	};
 };
 
@@ -76,8 +80,10 @@ const downloadConfigAsJson = (
 	fileNamePrefix: string,
 	password: string,
 ): Promise<boolean> => {
-	if (!password.trim()) {
-		throw new Error("Password is required for export.");
+	if (password.trim().length < MIN_EXPORT_PASSWORD_LENGTH) {
+		throw new Error(
+			`Password must be at least ${MIN_EXPORT_PASSWORD_LENGTH} characters.`,
+		);
 	}
 
 	const buildAndDownload = async (): Promise<boolean> => {

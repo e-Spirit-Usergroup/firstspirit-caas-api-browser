@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import Icon from "@/components/icons/icon";
@@ -12,7 +12,7 @@ type FileDropZoneProps = {
 function FileDropZone({ selectedFile, onFileSelect }: FileDropZoneProps) {
 	const { t } = useTranslation();
 	const [isDragOver, setIsDragOver] = useState(false);
-	const fileInputRef = useRef<HTMLInputElement>(null);
+	const inputId = useId();
 
 	const handleDragOver = (e: React.DragEvent) => {
 		e.preventDefault();
@@ -46,12 +46,14 @@ function FileDropZone({ selectedFile, onFileSelect }: FileDropZoneProps) {
 		}
 	};
 
+	// A label for the visually hidden (but focusable) file input: click, Enter and
+	// Space open the file picker natively, so no extra key handling is needed.
 	return (
-		// biome-ignore lint/a11y/noStaticElementInteractions: drag-and-drop area needs click + drag handlers
-		// biome-ignore lint/a11y/useKeyWithClickEvents: above
-		<div
+		<label
+			htmlFor={inputId}
 			className={cn(
 				"w-full cursor-pointer border-2 border-dashed rounded-xl p-12 text-center flex flex-col gap-2 transition-colors",
+				"has-[input:focus-visible]:ring-2 has-[input:focus-visible]:ring-ring has-[input:focus-visible]:ring-offset-2",
 				isDragOver &&
 					"border-blue-500 bg-blue-100 dark:border-blue-400 dark:bg-blue-900/30",
 				!isDragOver &&
@@ -64,9 +66,8 @@ function FileDropZone({ selectedFile, onFileSelect }: FileDropZoneProps) {
 			onDragOver={handleDragOver}
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}
-			onClick={() => fileInputRef.current?.click()}
 		>
-			<div className="flex items-center justify-center w-full">
+			<span className="flex items-center justify-center w-full">
 				<Icon
 					icon={!selectedFile ? "upload" : "check-circle"}
 					className={cn(
@@ -74,7 +75,7 @@ function FileDropZone({ selectedFile, onFileSelect }: FileDropZoneProps) {
 						selectedFile ? "fill-green-500" : "fill-blue-400",
 					)}
 				/>
-			</div>
+			</span>
 			<span>
 				{selectedFile ? (
 					<>
@@ -98,13 +99,13 @@ function FileDropZone({ selectedFile, onFileSelect }: FileDropZoneProps) {
 				)}
 			</span>
 			<input
-				ref={fileInputRef}
+				id={inputId}
 				type="file"
 				accept=".json,application/json"
-				className="hidden"
+				className="sr-only"
 				onChange={handleFileInputChange}
 			/>
-		</div>
+		</label>
 	);
 }
 

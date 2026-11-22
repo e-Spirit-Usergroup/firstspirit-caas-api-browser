@@ -3,12 +3,13 @@ import { ArrowLeft } from "lucide-react";
 import { useId } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { z } from "zod";
+import { z } from "zod";
 import { normalizeCaasApiKeys } from "@/lib/caas-api-keys";
 import { testCaaSApiKeys } from "@/lib/caas-connection-test";
+import { inferNavServiceUrl } from "@/lib/nav-service-url";
 import type { CaasApiKeys } from "@/types/configuration";
 import { stageOptionTexts } from "@/types/stage";
-import { caasApiKeysSchema } from "./entry-wizard/setup-form.schema";
+import { caasApiKeysSchema, schema } from "./entry-wizard/setup-form.schema";
 import type { ProjectRow } from "./projects-table";
 import { Button } from "./ui/button";
 import {
@@ -21,11 +22,20 @@ import { FormField } from "./ui/form-field";
 import { Input } from "./ui/input";
 import { Spinner } from "./ui/spinner";
 
-type ApiKeysInputs = z.infer<typeof caasApiKeysSchema>;
+const editProjectSchema = z.object({
+	caasApiKeys: caasApiKeysSchema,
+	navigationServiceUrl: schema.shape.navigationServiceUrl,
+});
+
+type EditProjectInputs = z.infer<typeof editProjectSchema>;
 
 type EditApiKeysStepProps = {
 	project: ProjectRow;
-	onSave: (project: ProjectRow, caasApiKeys: CaasApiKeys) => void;
+	onSave: (
+		project: ProjectRow,
+		caasApiKeys: CaasApiKeys,
+		navigationServiceUrl: string,
+	) => void;
 	onBack: () => void;
 };
 
@@ -34,29 +44,39 @@ function EditApiKeysStep({ project, onSave, onBack }: EditApiKeysStepProps) {
 	const { t } = useTranslation();
 	const previewApiKeyId = useId();
 	const releaseApiKeyId = useId();
+	const navServiceUrlId = useId();
+	const inferredNavServiceUrl = inferNavServiceUrl(project.project.caasUrl);
+	const storedNavServiceUrl = project.project.navigationServiceUrl ?? "";
 
 	const {
 		register,
 		handleSubmit,
 		formState: { errors, isSubmitting },
-	} = useForm<ApiKeysInputs>({
-		resolver: zodResolver(caasApiKeysSchema),
+	} = useForm<EditProjectInputs>({
+		resolver: zodResolver(editProjectSchema),
 		defaultValues: {
-			preview: project.project.caasApiKeys.preview ?? "",
-			release: project.project.caasApiKeys.release ?? "",
+			caasApiKeys: {
+				preview: project.project.caasApiKeys.preview ?? "",
+				release: project.project.caasApiKeys.release ?? "",
+			},
+			// An empty field means "derive from the CaaS URL".
+			navigationServiceUrl:
+				storedNavServiceUrl === inferredNavServiceUrl
+					? ""
+					: storedNavServiceUrl,
 		},
 		mode: "onChange",
 	});
 
-	const onSubmit: SubmitHandler<ApiKeysInputs> = async (data) => {
-		const caasApiKeys = normalizeCaasApiKeys(data);
+	const onSubmit: SubmitHandler<EditProjectInputs> = async (data) => {
+		const caasApiKeys = normalizeCaasApiKeys(data.caasApiKeys);
 		const isConnected = await testCaaSApiKeys(
 			project.project.caasUrl,
 			caasApiKeys,
 			() => {},
 			t,
 		);
-		if (isConnected) onSave(project, caasApiKeys);
+		if (isConnected) onSave(project, caasApiKeys, data.navigationServiceUrl);
 	};
 
 	return (
@@ -74,7 +94,7 @@ function EditApiKeysStep({ project, onSave, onBack }: EditApiKeysStepProps) {
 						<ArrowLeft className="size-4" />
 					</Button>
 					<DialogTitle>
-						{t("app.settings.manageProjects.editApiKeys")}
+						{t("app.settings.manageProjects.editProject")}
 					</DialogTitle>
 				</div>
 				<DialogDescription>
@@ -89,9 +109,9 @@ function EditApiKeysStep({ project, onSave, onBack }: EditApiKeysStepProps) {
 					label={t("setup.wizardSetup.step1.form.caasApiKey.previewLabel")}
 					htmlFor={previewApiKeyId}
 					error={
-						errors.preview
+						errors.caasApiKeys?.preview
 							? t(
-									`setup.wizardSetup.step1.form.caasApiKey.validation.${errors.preview.message}`,
+									`setup.wizardSetup.step1.form.caasApiKey.validation.${errors.caasApiKeys.preview.message}`,
 								)
 							: undefined
 					}
@@ -102,7 +122,7 @@ function EditApiKeysStep({ project, onSave, onBack }: EditApiKeysStepProps) {
 						placeholder={t(
 							"setup.wizardSetup.step1.form.caasApiKey.placeholder",
 						)}
-						{...register("preview")}
+						{...register("caasApiKeys.preview")}
 						disabled={isSubmitting}
 					/>
 				</FormField>
@@ -116,9 +136,33 @@ function EditApiKeysStep({ project, onSave, onBack }: EditApiKeysStepProps) {
 						placeholder={t(
 							"setup.wizardSetup.step1.form.caasApiKey.placeholder",
 						)}
-						{...register("release", { deps: "preview" })}
+						{...register("caasApiKeys.release", {
+							deps: "caasApiKeys.preview",
+						})}
 						disabled={isSubmitting}
 					/>
+				</FormField>
+				<FormField
+					label={t("setup.wizardSetup.step1.form.navServiceUrl.label")}
+					htmlFor={navServiceUrlId}
+					error={
+						errors.navigationServiceUrl
+							? t(
+									`setup.wizardSetup.step1.form.navServiceUrl.validation.${errors.navigationServiceUrl.message}`,
+								)
+							: undefined
+					}
+				>
+					<Input
+						type="url"
+						id={navServiceUrlId}
+						placeholder={inferredNavServiceUrl}
+						{...register("navigationServiceUrl")}
+						disabled={isSubmitting}
+					/>
+					<p className="text-muted-foreground text-xs">
+						{t("setup.wizardSetup.step1.form.navServiceUrl.hint")}
+					</p>
 				</FormField>
 			</div>
 			<DialogFooter>

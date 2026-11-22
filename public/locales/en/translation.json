@@ -52,7 +52,8 @@
 						"placeholder": "https://example-dev-caas-api.e-spirit.cloud/example-dev/794fe343-6365-47d6-b43f-0a4d495ae9ac.preview.content",
 						"validation": {
 							"required": "This field is required",
-							"stageNotDetected": "Could not detect the stage. The URL path must start with /CUSTOMER-STAGE/ (e.g. /example-dev/)."
+							"stageNotDetected": "Could not detect the stage. The URL path must start with /CUSTOMER-STAGE/ (e.g. /example-dev/).",
+							"projectNotDetected": "The URL must end with the project segment, e.g. /<projectId>.preview.content."
 						}
 					},
 					"submitBtn": "Submit",
@@ -77,6 +78,13 @@
 							"status403": "Error 403 | Probably wrong content mode",
 							"status404": "Error 404| Probably wrong project ID",
 							"statusError": "Error | Probably wrong URL"
+						}
+					},
+					"navServiceUrl": {
+						"label": "Navigation service URL (optional)",
+						"hint": "Leave empty to derive it from the CaaS URL.",
+						"validation": {
+							"invalidUrl": "Please enter a valid URL"
 						}
 					}
 				}
@@ -105,7 +113,9 @@
 				"passwordPlaceholder": "Enter decryption password",
 				"cancel": "Cancel",
 				"confirm": "Decrypt and import"
-			}
+			},
+			"fileTooLarge": "The file is too large (max. {{maxSize}} MB).",
+			"noFileSelected": "Please select a configuration file first."
 		}
 	},
 	"app": {
@@ -115,6 +125,28 @@
 			"project": "Project",
 			"decodedUrl": "Decoded URL",
 			"noUrlToDisplay": "No URL to display",
+			"pagination": {
+				"page": "Page",
+				"pageError": "Please enter a whole number of 1 or more",
+				"pageSize": "Page size",
+				"pageSizeError": "Please enter a whole number between 1 and {{max}}"
+			},
+			"service": {
+				"label": "API",
+				"caasParameters": "CaaS parameters",
+				"navParameters": "Navigation parameters"
+			},
+			"navigationService": {
+				"fullNavigation": "full navigation",
+				"bySeoRoute": "by SEO route",
+				"byId": "by ID",
+				"queryType": "Query type",
+				"format": "Format",
+				"depth": "Depth",
+				"allLevels": "all levels",
+				"route": "Route",
+				"id": "ID"
+			},
 			"copyUrlToClipboardBtn": {
 				"label": "Copy URL to Clipboard",
 				"success": "URL copied to clipboard",
@@ -150,13 +182,23 @@
 			"error": {
 				"missingUrl": "CaaS URL is not configured",
 				"requestFailed": "Request failed: {{status}} {{statusText}}",
-				"networkError": "Network error occurred. Please check your connection."
+				"networkError": "Network error occurred. Please check your connection.",
+				"missingNavServiceUrl": "Navigation service URL is not configured. Set it under Manage projects.",
+				"missingNavServiceRoute": "Please enter a route for the \"by SEO route\" query.",
+				"missingNavServiceId": "Please enter an ID for the \"by ID\" query."
 			}
 		},
 		"pagination": {
 			"previous": "Previous",
 			"next": "Next",
 			"pageXOfY": "Page {{x}} of {{y}}"
+		},
+		"response": {
+			"emptyTitle": "No {{api}} response yet",
+			"emptyHint": "Choose parameters and click “Execute”",
+			"duration": "{{ms}} ms",
+			"caasSummary": "{{total}} documents · {{returned}} on this page",
+			"navSummary": "{{count}} children"
 		},
 		"settings": {
 			"dialog": {
@@ -175,13 +217,9 @@
 				},
 				"queryParams": {
 					"label": "Query Parameter",
-					"np": {
-						"label": "np",
-						"tooltip": "By setting the np query param without any value, the returned collection will not include any collection metadata"
-					},
-					"repPj": {
-						"label": "rep pj",
-						"tooltip": "Setting the rep query param to pj will create a plain JSON response without any metadata. This removes any information about the number of elements or pages in the response and therefore breaks the pagination."
+					"repS": {
+						"label": "rep s",
+						"tooltip": "representation=standard: Returns the array of response objects without any metadata. Count data is also removed, so this breaks the pagination"
 					},
 					"count": {
 						"label": "count",
@@ -234,14 +272,24 @@
 				"addNewProject": "Add new project",
 				"emptyState": "No projects configured yet.",
 				"confirmRemove": "Remove project '{{projectName}}' from {{customerName}} ({{stage}})?",
-				"confirmRemoveSelected": "Remove {{count}} selected project(s)?"
+				"confirmRemoveSelected": "Remove {{count}} selected project(s)?",
+				"editProject": "Edit project",
+				"projectUpdated": "Updated '{{projectName}}'",
+				"exportPasswordMinLength": "Use at least {{count}} characters."
 			},
 			"executeRequest": "Execute"
 		},
 		"json": {
 			"noResponse": "Execute a Query to get a response",
 			"codeSampleAlt": "Code sample illustration",
-			"executeRequest": "Execute"
+			"executeRequest": "Execute",
+			"preview": "Large response – showing the first {{shown}} of {{total}} entries",
+			"showAll": "Load full response",
+			"view": {
+				"label": "View",
+				"tree": "Tree",
+				"raw": "JSON"
+			}
 		},
 		"common": {
 			"close": "Close",

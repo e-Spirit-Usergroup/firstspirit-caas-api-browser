@@ -5,7 +5,8 @@ const IV_LENGTH = 12;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-const toBase64 = (bytes: Uint8Array): string => btoa(String.fromCharCode(...bytes));
+const toBase64 = (bytes: Uint8Array): string =>
+	btoa(String.fromCharCode(...bytes));
 const fromBase64 = (value: string): Uint8Array =>
 	Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
 const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer => {
@@ -14,7 +15,10 @@ const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer => {
 	return arrayBuffer;
 };
 
-const deriveKey = async (password: string, salt: Uint8Array): Promise<CryptoKey> => {
+const deriveKey = async (
+	password: string,
+	salt: Uint8Array,
+): Promise<CryptoKey> => {
 	const passwordKey = await crypto.subtle.importKey(
 		"raw",
 		textEncoder.encode(password),
@@ -46,7 +50,10 @@ const assertPassword = (password: string): void => {
 	}
 };
 
-export const encryptCaasApiKey = async (apiKey: string, password: string): Promise<string> => {
+export const encryptCaasApiKey = async (
+	apiKey: string,
+	password: string,
+): Promise<string> => {
 	assertPassword(password);
 	const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
 	const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));

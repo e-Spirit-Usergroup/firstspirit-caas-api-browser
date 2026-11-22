@@ -1,23 +1,53 @@
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { JSONTree } from "react-json-tree";
 import Icon from "@/components/icons/icon";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+	countJsonNodes,
+	PREVIEW_NODE_LIMIT,
+	truncateJson,
+} from "@/lib/json-preview";
 import { JSONViewerTheme } from "@/lib/json-viewer-config";
 import { cn } from "@/lib/tw-utils";
+import { JsonTreeView } from "./json-tree-view";
+import { RawJson } from "./raw-json";
+
+export type JsonView = "tree" | "raw";
 
 type Props = {
 	// biome-ignore lint/suspicious/noExplicitAny: explicit any type allowed
 	json?: any;
 	className?: string;
 	onCopy?: () => void;
+	view?: JsonView;
 };
 
-export default function JSONViewer({ json, className, onCopy }: Props) {
+export default function JSONViewer({
+	json,
+	className,
+	onCopy,
+	view = "tree",
+}: Props) {
 	const { t } = useTranslation();
+
+	// Remember which response was fully expanded, so a new response starts as a preview again
+	const [expandedJson, setExpandedJson] = useState<unknown>(null);
+	const isExpanded = expandedJson === json;
+
+	const totalNodes = useMemo(
+		() => (json == null ? 0 : countJsonNodes(json)),
+		[json],
+	);
+	const isTruncated = totalNodes > PREVIEW_NODE_LIMIT && !isExpanded;
+	const displayedJson = useMemo(
+		() => (isTruncated ? truncateJson(json, PREVIEW_NODE_LIMIT) : json),
+		[json, isTruncated],
+	);
+
 	return (
 		<div
 			className={cn(
@@ -60,14 +90,28 @@ export default function JSONViewer({ json, className, onCopy }: Props) {
 							</Tooltip>
 						</div>
 					)}
-					<JSONTree
-						data={json}
-						theme={JSONViewerTheme}
-						invertTheme={false}
-						collectionLimit={10}
-						hideRoot={true}
-						shouldExpandNodeInitially={() => true}
-					/>
+					{view === "raw" ? (
+						<RawJson json={displayedJson} />
+					) : (
+						<JsonTreeView data={displayedJson} />
+					)}
+					{isTruncated && (
+						<div className="mt-4 mb-2 flex flex-col items-center gap-3 border-t border-white/10 pt-5 text-center">
+							<p className="text-sm text-neutral-400">
+								{t("app.json.preview", {
+									shown: PREVIEW_NODE_LIMIT.toLocaleString(),
+									total: totalNodes.toLocaleString(),
+								})}
+							</p>
+							<button
+								type="button"
+								onClick={() => setExpandedJson(json)}
+								className="h-10 rounded-lg border border-white/15 bg-white/5 px-4 text-sm font-medium text-neutral-100 transition-colors hover:bg-white/10"
+							>
+								{t("app.json.showAll")}
+							</button>
+						</div>
+					)}
 				</>
 			)}
 		</div>

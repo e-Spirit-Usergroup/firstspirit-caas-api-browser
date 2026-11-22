@@ -228,15 +228,17 @@ function ManageProjectsDialog({
 	const saveProjectApiKeys = (
 		project: ProjectRow,
 		caasApiKeys: CaasApiKeys,
+		navigationServiceUrl: string,
 	) => {
 		setProjectApiKeys({
 			customerName: project.customerName,
 			stage: project.stage,
 			projectName: project.projectName,
 			caasApiKeys,
+			navigationServiceUrl,
 		});
 		toast.success(
-			t("app.settings.manageProjects.apiKeysUpdated", {
+			t("app.settings.manageProjects.projectUpdated", {
 				projectName: project.projectName,
 			}),
 		);

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getAvailableModes } from "@/lib/caas-api-keys";
 import {
@@ -7,12 +7,11 @@ import {
 } from "@/stores/caas-config-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { type ModeType, modeTypes } from "@/types/mode";
-import type { StageType } from "@/types/stage";
+import { type StageType, stageTypes } from "@/types/stage";
 import Icon from "./icons/icon";
 import ManageProjectsDialog from "./manage-projects-dialog";
 import { ProjectSettingsSection } from "./project-settings-section";
 import { Button } from "./ui/button";
-import { CheckboxFieldWithTooltip } from "./ui/checkbox-field-with-tooltip";
 import {
 	Dialog,
 	DialogContent,
@@ -27,22 +26,7 @@ import { UpdateSection } from "./update-section";
 function Settings() {
 	const { t } = useTranslation();
 
-	const npId = useId();
-	const repId = useId();
-	const countId = useId();
-
-	const {
-		locale,
-		setLocale,
-		mode,
-		setMode,
-		np,
-		setNp,
-		rep,
-		setRep,
-		count,
-		setCount,
-	} = useSettingsStore();
+	const { locale, setLocale, mode, setMode } = useSettingsStore();
 
 	const {
 		customers,
@@ -73,9 +57,6 @@ function Settings() {
 	);
 	const [localLocale, setLocalLocale] = useState(locale ?? locales[0] ?? "");
 	const [localMode, setLocalMode] = useState<ModeType>(mode);
-	const [localNp, setLocalNp] = useState(np);
-	const [localRep, setLocalRep] = useState(rep);
-	const [localCount, setLocalCount] = useState(count);
 
 	// Sync local state from store when dialog opens
 	// biome-ignore lint/correctness/useExhaustiveDependencies: intentionally only sync on open
@@ -86,9 +67,6 @@ function Settings() {
 			setLocalProjectName(activeSelection?.projectName ?? "");
 			setLocalLocale(locale ?? locales[0] ?? "");
 			setLocalMode(mode);
-			setLocalNp(np);
-			setLocalRep(rep);
-			setLocalCount(count);
 		}
 	}, [isSettingsOpen]);
 
@@ -118,8 +96,11 @@ function Settings() {
 		: (localAvailableModes[0] ?? localMode);
 
 	const handleCustomerChange = (value: string) => {
+		const customer = customers.find((item) => item.customerName === value);
+		const firstStage =
+			stageTypes.find((stage) => customer?.stages[stage].length) ?? "dev";
 		setLocalCustomerName(value);
-		setLocalStage("dev");
+		setLocalStage(firstStage);
 		setLocalProjectName("");
 	};
 
@@ -135,9 +116,6 @@ function Settings() {
 		setActiveProject(localProjectName);
 		setLocale(localLocale);
 		setMode(effectiveLocalMode);
-		setNp(localNp);
-		setRep(localRep);
-		setCount(localCount);
 		setIsSettingsOpen(false);
 	};
 
@@ -184,48 +162,6 @@ function Settings() {
 							onModeChange={setLocalMode}
 							onManageProjects={openManageProjectsDialog}
 						/>
-
-						<hr className="border-t my-4" />
-
-						{/* Query Parameters section */}
-						<div className="flex flex-col gap-4">
-							<h2 className="font-semibold">
-								{t("app.settings.dialog.queryParams.label")}
-							</h2>
-							<div className="flex items-center gap-8">
-								<CheckboxFieldWithTooltip
-									id={npId}
-									label={t("app.settings.dialog.queryParams.np.label")}
-									checked={localNp}
-									onCheckedChange={setLocalNp}
-									tooltipIcon="information-circle"
-									tooltipIconColor="text-blue-500"
-									tooltipText={t("app.settings.dialog.queryParams.np.tooltip")}
-								/>
-								<CheckboxFieldWithTooltip
-									id={repId}
-									label={t("app.settings.dialog.queryParams.repPj.label")}
-									checked={localRep}
-									onCheckedChange={setLocalRep}
-									tooltipIcon="exclamation-triangle"
-									tooltipIconColor="text-orange-500"
-									tooltipText={t(
-										"app.settings.dialog.queryParams.repPj.tooltip",
-									)}
-								/>
-								<CheckboxFieldWithTooltip
-									id={countId}
-									label={t("app.settings.dialog.queryParams.count.label")}
-									checked={localCount}
-									onCheckedChange={setLocalCount}
-									tooltipIcon="information-circle"
-									tooltipIconColor="text-blue-500"
-									tooltipText={t(
-										"app.settings.dialog.queryParams.count.tooltip",
-									)}
-								/>
-							</div>
-						</div>
 
 						<hr className="border-t my-4" />
 

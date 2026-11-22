@@ -146,7 +146,7 @@ function ProjectsTable({
 												<DropdownMenuItem
 													onClick={() => onEditApiKeys(project)}
 												>
-													{t("app.settings.manageProjects.editApiKeys")}
+													{t("app.settings.manageProjects.editProject")}
 												</DropdownMenuItem>
 												<DropdownMenuItem
 													variant="destructive"

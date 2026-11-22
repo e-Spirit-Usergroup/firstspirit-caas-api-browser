@@ -11,8 +11,29 @@ type UrlDisplayProps = {
 	onCopy: () => void;
 };
 
+function safeDecode(value: string): string {
+	try {
+		return decodeURIComponent(value);
+	} catch {
+		return value;
+	}
+}
+
+function splitUrl(url: string) {
+	try {
+		const parsed = new URL(url);
+		return {
+			base: safeDecode(`${parsed.origin}${parsed.pathname}`),
+			params: [...parsed.searchParams.entries()],
+		};
+	} catch {
+		return { base: safeDecode(url), params: [] };
+	}
+}
+
 function UrlDisplay({ url, onCopy }: UrlDisplayProps) {
 	const { t } = useTranslation();
+	const { base, params } = splitUrl(url);
 
 	return (
 		<div className="col-span-12 bg-blue-100 dark:bg-neutral-800 p-4 rounded-md text-blue-950 dark:text-blue-100">
@@ -37,8 +58,22 @@ function UrlDisplay({ url, onCopy }: UrlDisplayProps) {
 				</Tooltip>
 			</span>
 			{url ? (
-				<span className="mt-2 block bg-neutral-300 text-neutral-700 dark:bg-neutral-900 dark:text-blue-400 p-1.5 text-sm font-mono break-all rounded-sm">
-					{decodeURIComponent(url)}
+				<span className="mt-2 block bg-neutral-300 text-neutral-700 dark:bg-neutral-900 dark:text-blue-400 px-3 py-2 text-sm leading-relaxed font-mono break-all rounded-sm">
+					{base}
+					{params.map(([key, value], index) => (
+						<span key={`${key}=${value}`}>
+							<span className="text-neutral-600 dark:text-neutral-400">
+								{index === 0 ? "?" : "&"}
+							</span>
+							<span className="font-semibold text-violet-800 dark:text-violet-300">
+								{key}
+							</span>
+							<span className="text-neutral-600 dark:text-neutral-400">=</span>
+							<span className="font-semibold text-neutral-900 dark:text-neutral-100">
+								{value}
+							</span>
+						</span>
+					))}
 				</span>
 			) : (
 				<span className="mt-2 block p-1.5 text-sm italic text-neutral-400 dark:text-neutral-500">

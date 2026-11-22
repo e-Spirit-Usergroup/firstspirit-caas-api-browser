@@ -25,6 +25,7 @@ import { getAvailableModes, normalizeCaasApiKeys } from "@/lib/caas-api-keys";
 import { testCaaSApiKeys } from "@/lib/caas-connection-test";
 import { discoverSchemasAndLocales } from "@/lib/caas-discovery";
 import { applyModeToCaasUrl, getStageFromCaasUrl } from "@/lib/caas-url";
+import { inferNavServiceUrl } from "@/lib/nav-service-url";
 import {
 	MAGIC_PASTE_PROJECT_ID_PLACEHOLDER,
 	parseMagicPasteCaasUrl,
@@ -57,6 +58,7 @@ function RouteComponent() {
 	const caasPreviewApiKeyId = useId();
 	const caasReleaseApiKeyId = useId();
 	const caasUrlId = useId();
+	const navServiceUrlId = useId();
 	const caasUrlInputRef = useRef<HTMLInputElement>(null);
 
 	const [connectionStatus, setConnectionStatus] =
@@ -76,6 +78,7 @@ function RouteComponent() {
 				projectName: "",
 				caasApiKeys: { preview: "", release: "" },
 				caasUrl: "",
+				navigationServiceUrl: "",
 			},
 			mode: "onChange",
 		});
@@ -163,7 +166,9 @@ function RouteComponent() {
 	};
 
 	const { errors } = useFormState({ control });
-	const detectedStage = getStageFromCaasUrl(watch("caasUrl"));
+	const caasUrl = watch("caasUrl");
+	const detectedStage = getStageFromCaasUrl(caasUrl);
+	const inferredNavServiceUrl = inferNavServiceUrl(caasUrl);
 	const customerName = watch("customerName");
 	const isFormLocked =
 		connectionStatus === "connected" || isDiscoveringMetadata;
@@ -363,6 +368,29 @@ function RouteComponent() {
 					{t("setup.wizardSetup.step1.form.caasApiKey.hint")}
 				</p>
 			</div>
+
+			<FormField
+				label={t("setup.wizardSetup.step1.form.navServiceUrl.label")}
+				htmlFor={navServiceUrlId}
+				error={
+					errors.navigationServiceUrl
+						? t(
+								`setup.wizardSetup.step1.form.navServiceUrl.validation.${errors.navigationServiceUrl.message}`,
+							)
+						: undefined
+				}
+			>
+				<Input
+					type="url"
+					id={navServiceUrlId}
+					placeholder={inferredNavServiceUrl}
+					{...register("navigationServiceUrl")}
+					disabled={isFormLocked}
+				/>
+				<p className="text-muted-foreground text-xs mt-1">
+					{t("setup.wizardSetup.step1.form.navServiceUrl.hint")}
+				</p>
+			</FormField>
 
 			{(connectionStatus !== "connected" || isDiscoveringMetadata) && (
 				<Button
