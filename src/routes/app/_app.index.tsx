@@ -28,7 +28,6 @@ import type {
 import { buildNavServiceRequest } from "@/lib/nav-service-request";
 import { getService, type Service } from "@/lib/services";
 import { cn } from "@/lib/tw-utils";
-import { useDebouncedValue } from "@/lib/use-debounced-value";
 import {
 	getActiveProjectFromState,
 	isCaaSConfigStoreInitialized,
@@ -51,9 +50,6 @@ const emptyResults: Record<Service, ServiceResult | null> = {
 	caas: null,
 	"navigation-service": null,
 };
-
-// Free-text inputs only trigger an automatic re-run once typing has paused.
-const TEXT_INPUT_DEBOUNCE_MS = 500;
 
 function RouteComponent() {
 	const { t } = useTranslation();
@@ -85,19 +81,6 @@ function RouteComponent() {
 	// Only the latest request may update the view; older ones are aborted.
 	const requestIdRef = useRef(0);
 	const abortControllerRef = useRef<AbortController | null>(null);
-
-	const debouncedNavServiceDepth = useDebouncedValue(
-		navServiceDepth,
-		TEXT_INPUT_DEBOUNCE_MS,
-	);
-	const debouncedNavServiceRoute = useDebouncedValue(
-		navServiceRoute,
-		TEXT_INPUT_DEBOUNCE_MS,
-	);
-	const debouncedNavServiceId = useDebouncedValue(
-		navServiceId,
-		TEXT_INPUT_DEBOUNCE_MS,
-	);
 
 	const {
 		register,
@@ -164,8 +147,9 @@ function RouteComponent() {
 		}
 	}, [projectSettings?.caasApiKeys, mode, setMode]);
 
-	// Re-run the request of the selected API when its parameters change,
-	// but only once it has been executed manually.
+	// Re-run the request of the selected API when a setting or option changes,
+	// but only once it has been executed manually. Typed inputs (identifiers,
+	// routes, ids, paging, depth) are only sent on submit.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: onSubmit reads the latest values itself
 	useEffect(() => {
 		if (!results[selectedService]) return;
@@ -177,9 +161,6 @@ function RouteComponent() {
 		count,
 		navServiceOption,
 		navServiceFormat,
-		debouncedNavServiceDepth,
-		debouncedNavServiceRoute,
-		debouncedNavServiceId,
 		handleSubmit,
 	]);
 
