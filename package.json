@@ -1,8 +1,8 @@
 {
 	"name": "firstspirit-caas-api-browser",
-	"version": "1.1.1",
+	"version": "2.0.0",
 	"type": "module",
-	"author": "Kevin Rieger <k.rieger@reply.de> (https://neoreply.de/), Felix Kratz <f.kratz@reply.de> (https://neoreply.de/)",
+	"author": "Kevin Rieger <k.rieger@reply.de> (https://neoreply.de/), Felix Kratz <f.kratz@reply.de> (https://neoreply.de/), Stephanie Walter <st.walter@reply.de> (https://neoreply.de/)",
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc -b && vite build",
