@@ -234,8 +234,8 @@ function FilterSection({
 
 			{/* Dataset schema + entity type selectors */}
 			{filterType === "Dataset" && databaseSchemas?.length ? (
-				<>
-					<div className="col-span-6 flex flex-col gap-1.5">
+				<div className="flex flex-wrap gap-x-6 gap-y-4">
+					<div className="flex flex-col gap-1.5">
 						<span className="text-sm font-semibold">
 							{t("app.form.entityTypeDropdown.schemaLabel")}
 						</span>
@@ -281,7 +281,7 @@ function FilterSection({
 						</Select>
 					</div>
 
-					<div className="col-span-6 flex flex-col gap-1.5">
+					<div className="flex flex-col gap-1.5">
 						<span className="text-sm font-semibold">
 							{t("app.form.entityTypeDropdown.entityTypeLabel")}
 						</span>
@@ -322,7 +322,7 @@ function FilterSection({
 							</SelectContent>
 						</Select>
 					</div>
-				</>
+				</div>
 			) : null}
 		</>
 	);
