@@ -183,7 +183,9 @@
 				"missingUrl": "CaaS URL ist nicht konfiguriert",
 				"requestFailed": "Anfrage fehlgeschlagen: {{status}} {{statusText}}",
 				"networkError": "Netzwerkfehler aufgetreten. Bitte überprüfen Sie Ihre Verbindung.",
-				"missingNavServiceUrl": "Navigation Service URL ist nicht konfiguriert. Sie kann unter Projekte verwalten gesetzt werden."
+				"missingNavServiceUrl": "Navigation Service URL ist nicht konfiguriert. Sie kann unter Projekte verwalten gesetzt werden.",
+				"missingNavServiceRoute": "Bitte eine Route für die Abfrage „by SEO route“ eingeben.",
+				"missingNavServiceId": "Bitte eine ID für die Abfrage „by ID“ eingeben."
 			}
 		},
 		"pagination": {

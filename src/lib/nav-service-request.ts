@@ -30,12 +30,12 @@ export function buildNavServiceRequest(
 		url.pathname = url.pathname
 			.replace(/(\/navigation\/)(preview|release)(\.)/, `$1${mode}$3`)
 			.replace(/\/+$/, "");
-		const trimmedRoute = route.trim();
-		const trimmedId = id.trim();
-		if (navServiceOption === "seo-route" && trimmedRoute) {
-			url.pathname += `/by-seo-route${encodeRoute(trimmedRoute)}`;
-		} else if (navServiceOption === "id" && trimmedId) {
-			url.pathname += `/node/${encodeURIComponent(trimmedId)}`;
+		// The caller ensures a route or id is set for the matching option; falling back
+		// to the full navigation here would silently answer a different query.
+		if (navServiceOption === "seo-route") {
+			url.pathname += `/by-seo-route${encodeRoute(route.trim())}`;
+		} else if (navServiceOption === "id") {
+			url.pathname += `/node/${encodeURIComponent(id.trim())}`;
 		}
 		if (locale) url.searchParams.set("language", locale);
 		if (depth.trim()) {

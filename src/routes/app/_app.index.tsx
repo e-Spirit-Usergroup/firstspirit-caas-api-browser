@@ -93,8 +93,7 @@ function RouteComponent() {
 	} = useForm<AppFormData>({
 		defaultValues: { page: DEFAULT_PAGE, pagesize: DEFAULT_PAGE_SIZE },
 	});
-	const { locale, setLocale, mode, setMode, rep, count } =
-		useSettingsStore();
+	const { locale, setLocale, mode, setMode, rep, count } = useSettingsStore();
 	const navigate = useNavigate();
 
 	const service = getService(selectedService);
@@ -149,20 +148,12 @@ function RouteComponent() {
 
 	// Re-run the request of the selected API when a setting or option changes,
 	// but only once it has been executed manually. Typed inputs (identifiers,
-	// routes, ids, paging, depth) are only sent on submit.
+	// routes, ids, paging, depth) and the navigation query type are only sent on submit.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: onSubmit reads the latest values itself
 	useEffect(() => {
 		if (!results[selectedService]) return;
 		handleSubmit(onSubmit)();
-	}, [
-		mode,
-		locale,
-		rep,
-		count,
-		navServiceOption,
-		navServiceFormat,
-		handleSubmit,
-	]);
+	}, [mode, locale, rep, count, navServiceFormat, handleSubmit]);
 
 	/** Runs the request; resolves to false only if it failed, not if a newer request replaced it. */
 	async function onSubmit(data: AppFormData): Promise<boolean> {
@@ -182,6 +173,14 @@ function RouteComponent() {
 				count,
 			});
 		} else {
+			if (navServiceOption === "seo-route" && !navServiceRoute.trim()) {
+				toast.error(t("app.form.error.missingNavServiceRoute"));
+				return false;
+			}
+			if (navServiceOption === "id" && !navServiceId.trim()) {
+				toast.error(t("app.form.error.missingNavServiceId"));
+				return false;
+			}
 			const requestUrl = buildNavServiceRequest(
 				projectSettings?.navigationServiceUrl,
 				mode,

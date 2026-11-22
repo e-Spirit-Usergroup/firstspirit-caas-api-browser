@@ -183,7 +183,9 @@
 				"missingUrl": "URL CaaS non configurata",
 				"requestFailed": "Richiesta fallita: {{status}} {{statusText}}",
 				"networkError": "Si è verificato un errore di rete. Controlla la connessione.",
-				"missingNavServiceUrl": "URL Navigation Service non configurata. Impostala in Gestisci progetti."
+				"missingNavServiceUrl": "URL Navigation Service non configurata. Impostala in Gestisci progetti.",
+				"missingNavServiceRoute": "Inserisci una route per la query \"by SEO route\".",
+				"missingNavServiceId": "Inserisci un ID per la query \"by ID\"."
 			}
 		},
 		"pagination": {
