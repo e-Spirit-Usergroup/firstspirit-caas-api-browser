@@ -46,6 +46,17 @@ export const Route = createFileRoute("/app/_app/")({
 	component: RouteComponent,
 });
 
+/** Fields that change which documents match, so the current page no longer applies. */
+const FILTER_FIELDS = new Set<keyof AppFormData>([
+	"filterType",
+	"useNameOrIdentifier",
+	"name",
+	"identifier",
+	"route",
+	"schema",
+	"entityType",
+]);
+
 const emptyResults: Record<Service, ServiceResult | null> = {
 	caas: null,
 	"navigation-service": null,
@@ -129,6 +140,21 @@ function RouteComponent() {
 		activeSelection?.stage,
 		activeSelection?.projectName,
 	]);
+
+	// A changed filter matches other documents: start at page 1 again and hide the
+	// pagination of the previous response until the new query has run.
+	useEffect(() => {
+		const subscription = watch((_values, { name }) => {
+			if (!name || !FILTER_FIELDS.has(name)) return;
+			if (getValues("page") !== DEFAULT_PAGE) {
+				setValue("page", DEFAULT_PAGE, { shouldValidate: true });
+			}
+			setPageInfos((prev) =>
+				prev.totalPages === 0 ? prev : { totalPages: 0, currentPage: 1 },
+			);
+		});
+		return () => subscription.unsubscribe();
+	}, [watch, getValues, setValue]);
 
 	useEffect(() => {
 		const projectLocales = projectSettings?.locales ?? [];
