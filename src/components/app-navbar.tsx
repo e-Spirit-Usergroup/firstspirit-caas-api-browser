@@ -15,7 +15,8 @@ export function Navbar({ className, ...props }: Props) {
 					to="/"
 					className="text-xl font-bold"
 				>{`FirstSpirit CaaS API Browser ${version}`}</Link>
-				<div className="flex gap-0 items-center ml-auto">
+				{/* gap-1 keeps each button's 3px focus ring clear of its neighbours */}
+				<div className="flex gap-1 items-center ml-auto">
 					<LanguageSwitch />
 					<ThemeSwitch />
 					<Settings />
