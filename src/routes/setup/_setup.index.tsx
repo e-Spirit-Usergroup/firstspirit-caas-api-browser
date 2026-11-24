@@ -23,7 +23,7 @@ function RouteComponent() {
 				</p>
 				<img
 					src="/undraw/undraw_files-uploading_qf8u.svg"
-					alt="wizard"
+					alt={t("app.common.uploadConfigAlt")}
 					className="w-full max-w-48 max-h-48 mx-auto mt-4"
 				/>
 			</Link>
@@ -36,7 +36,7 @@ function RouteComponent() {
 				<p className="text-neutral-500">{t("setup.wizardSetup.description")}</p>
 				<img
 					src="/undraw/undraw_terms_sx63.svg"
-					alt="wizard"
+					alt={t("app.common.wizardSetupAlt")}
 					className="w-full max-w-48 max-h-48 mx-auto mt-4"
 				/>
 			</Link>
