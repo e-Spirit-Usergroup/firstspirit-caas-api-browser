@@ -142,7 +142,7 @@ function ResponsePanel({
 						<JSONViewer
 							json={result.data}
 							view={jsonView}
-							className="flex-1 overflow-y-scroll no-scrollbar rounded-none px-5 py-3"
+							className="flex-1 overflow-y-auto dark-scrollbar rounded-none px-5 py-3"
 						/>
 					</>
 				) : (

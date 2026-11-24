@@ -23,6 +23,31 @@
 		-ms-overflow-style: none;
 		scrollbar-width: none;
 	}
+
+	/* Thin, subtle scrollbar for dark surfaces like the JSON viewer */
+	.dark-scrollbar {
+		scrollbar-width: thin;
+		scrollbar-color: rgb(255 255 255 / 0.2) transparent;
+		scrollbar-gutter: stable;
+	}
+	.dark-scrollbar:hover {
+		scrollbar-color: rgb(255 255 255 / 0.35) transparent;
+	}
+	/* Fallback for browsers without scrollbar-color (older Safari) */
+	.dark-scrollbar::-webkit-scrollbar {
+		width: 8px;
+		height: 8px;
+	}
+	.dark-scrollbar::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.dark-scrollbar::-webkit-scrollbar-thumb {
+		background: rgb(255 255 255 / 0.2);
+		border-radius: 9999px;
+	}
+	.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+		background: rgb(255 255 255 / 0.35);
+	}
 }
 
 :root {
