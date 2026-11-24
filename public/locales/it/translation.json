@@ -283,8 +283,11 @@
 			"noResponse": "Esegui una query per ottenere una risposta",
 			"codeSampleAlt": "Illustrazione esempio di codice",
 			"executeRequest": "Esegui",
-			"preview": "Risposta di grandi dimensioni – vengono mostrate le prime {{shown}} di {{total}} voci",
-			"showAll": "Carica la risposta completa",
+			"partiallyExpanded": "Risposta di grandi dimensioni – i livelli più profondi sono inizialmente compressi",
+			"expandAll": "Espandi tutto",
+			"expandedAll": "Tutti i livelli espansi",
+			"expandAllCapped": "Risposta molto grande – espansa il più possibile",
+			"collapse": "Comprimi alla panoramica",
 			"view": {
 				"label": "Vista",
 				"tree": "Albero",

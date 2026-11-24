@@ -283,8 +283,11 @@
 			"noResponse": "Execute a Query to get a response",
 			"codeSampleAlt": "Code sample illustration",
 			"executeRequest": "Execute",
-			"preview": "Large response – showing the first {{shown}} of {{total}} entries",
-			"showAll": "Load full response",
+			"partiallyExpanded": "Large response – deeper levels start collapsed",
+			"expandAll": "Expand all",
+			"expandedAll": "All levels expanded",
+			"expandAllCapped": "Very large response – expanded as far as possible",
+			"collapse": "Collapse to overview",
 			"view": {
 				"label": "View",
 				"tree": "Tree",

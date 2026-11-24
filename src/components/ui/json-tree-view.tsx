@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import { JSONTree } from "react-json-tree";
+import { type JsonKeyPath, TREE_COLLECTION_LIMIT } from "@/lib/json-preview";
 import { JSONViewerTheme as base } from "@/lib/json-viewer-config";
 
 type TreeProps = ComponentProps<typeof JSONTree>;
@@ -79,17 +80,19 @@ const getItemString: TreeProps["getItemString"] = () => null;
 
 type JsonTreeViewProps = {
 	data: unknown;
+	/** Read only when a node mounts; change the component's `key` to re-apply it. */
+	shouldExpand: (keyPath: JsonKeyPath) => boolean;
 };
 
-function JsonTreeView({ data }: JsonTreeViewProps) {
+function JsonTreeView({ data, shouldExpand }: JsonTreeViewProps) {
 	return (
 		<JSONTree
 			data={data}
 			theme={theme}
 			invertTheme={false}
-			collectionLimit={10}
+			collectionLimit={TREE_COLLECTION_LIMIT}
 			hideRoot={true}
-			shouldExpandNodeInitially={() => true}
+			shouldExpandNodeInitially={shouldExpand}
 			labelRenderer={labelRenderer}
 			getItemString={getItemString}
 		/>

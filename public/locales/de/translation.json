@@ -283,8 +283,11 @@
 			"noResponse": "Führe eine Abfrage aus, um eine Antwort zu erhalten",
 			"codeSampleAlt": "Code-Beispiel Illustration",
 			"executeRequest": "Ausführen",
-			"preview": "Große Antwort – die ersten {{shown}} von {{total}} Einträgen werden angezeigt",
-			"showAll": "Vollständige Antwort laden",
+			"partiallyExpanded": "Große Antwort – tiefere Ebenen sind zunächst eingeklappt",
+			"expandAll": "Alles ausklappen",
+			"expandedAll": "Alle Ebenen ausgeklappt",
+			"expandAllCapped": "Sehr große Antwort – so weit wie möglich ausgeklappt",
+			"collapse": "Zur Übersicht einklappen",
 			"view": {
 				"label": "Ansicht",
 				"tree": "Baum",

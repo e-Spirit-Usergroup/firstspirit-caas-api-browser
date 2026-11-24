@@ -7,9 +7,8 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-	countJsonNodes,
-	PREVIEW_NODE_LIMIT,
-	truncateJson,
+	computeInitialExpansion,
+	EXPAND_ALL_ROW_BUDGET,
 } from "@/lib/json-preview";
 import { JSONViewerTheme } from "@/lib/json-viewer-config";
 import { cn } from "@/lib/tw-utils";
@@ -26,6 +25,20 @@ type Props = {
 	view?: JsonView;
 };
 
+const responseIds = new WeakMap<object, number>();
+let nextResponseId = 0;
+
+/** Stable id per response object, so the tree remounts (and resets its expansion) for a new response. */
+function getResponseId(json: unknown): number {
+	if (json === null || typeof json !== "object") return -1;
+	let id = responseIds.get(json);
+	if (id === undefined) {
+		id = nextResponseId++;
+		responseIds.set(json, id);
+	}
+	return id;
+}
+
 export default function JSONViewer({
 	json,
 	className,
@@ -34,19 +47,31 @@ export default function JSONViewer({
 }: Props) {
 	const { t } = useTranslation();
 
-	// Remember which response was fully expanded, so a new response starts as a preview again
+	// Remember which response was expanded fully, so a new response starts as an overview again
 	const [expandedJson, setExpandedJson] = useState<unknown>(null);
-	const isExpanded = expandedJson === json;
+	const isExpandedAll = json != null && expandedJson === json;
 
-	const totalNodes = useMemo(
-		() => (json == null ? 0 : countJsonNodes(json)),
-		[json],
+	const initialExpansion = useMemo(
+		() => (view === "tree" ? computeInitialExpansion(json) : null),
+		[json, view],
 	);
-	const isTruncated = totalNodes > PREVIEW_NODE_LIMIT && !isExpanded;
-	const displayedJson = useMemo(
-		() => (isTruncated ? truncateJson(json, PREVIEW_NODE_LIMIT) : json),
-		[json, isTruncated],
+	const expandAllExpansion = useMemo(
+		() =>
+			view === "tree" && isExpandedAll
+				? computeInitialExpansion(json, EXPAND_ALL_ROW_BUDGET)
+				: null,
+		[json, view, isExpandedAll],
 	);
+	const expansion = expandAllExpansion ?? initialExpansion;
+	const isPartiallyExpanded =
+		initialExpansion !== null && !initialExpansion.isComplete;
+
+	let expansionHint = t("app.json.partiallyExpanded");
+	if (expandAllExpansion) {
+		expansionHint = expandAllExpansion.isComplete
+			? t("app.json.expandedAll")
+			: t("app.json.expandAllCapped");
+	}
 
 	return (
 		<div
@@ -90,27 +115,28 @@ export default function JSONViewer({
 							</Tooltip>
 						</div>
 					)}
-					{view === "raw" ? (
-						<RawJson json={displayedJson} />
-					) : (
-						<JsonTreeView data={displayedJson} />
-					)}
-					{isTruncated && (
-						<div className="mt-4 mb-2 flex flex-col items-center gap-3 border-t border-white/10 pt-5 text-center">
-							<p className="text-sm text-neutral-400">
-								{t("app.json.preview", {
-									shown: PREVIEW_NODE_LIMIT.toLocaleString(),
-									total: totalNodes.toLocaleString(),
-								})}
-							</p>
+					{isPartiallyExpanded && (
+						<div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2">
+							<p className="text-xs text-neutral-400">{expansionHint}</p>
 							<button
 								type="button"
-								onClick={() => setExpandedJson(json)}
-								className="h-10 rounded-lg border border-white/15 bg-white/5 px-4 text-sm font-medium text-neutral-100 transition-colors hover:bg-white/10"
+								onClick={() => setExpandedJson(isExpandedAll ? null : json)}
+								className="h-7 cursor-pointer rounded-md border border-white/15 bg-white/5 px-3 text-xs font-medium text-neutral-100 transition-colors hover:bg-white/10"
 							>
-								{t("app.json.showAll")}
+								{isExpandedAll
+									? t("app.json.collapse")
+									: t("app.json.expandAll")}
 							</button>
 						</div>
+					)}
+					{view === "raw" || !expansion ? (
+						<RawJson json={json} />
+					) : (
+						<JsonTreeView
+							key={`${getResponseId(json)}-${isExpandedAll ? "all" : "initial"}`}
+							data={json}
+							shouldExpand={expansion.shouldExpand}
+						/>
 					)}
 				</>
 			)}
