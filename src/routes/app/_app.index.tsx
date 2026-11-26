@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Navbar } from "@/components/app-navbar";
 import { CaaSParameters } from "@/components/caas-parameters";
+import Icon from "@/components/icons/icon";
 import { NavServiceParameters } from "@/components/nav-service-parameters";
 import { ParameterGroup } from "@/components/parameter-group";
 import { ResponsePanel, type ServiceResult } from "@/components/response-panel";
@@ -313,7 +313,7 @@ function RouteComponent() {
 	}
 
 	const formPanel = (
-		<div className="flex h-full flex-col">
+		<div className="flex h-full min-h-0 flex-col overflow-hidden">
 			<div className="flex-1 overflow-y-scroll no-scrollbar p-4">
 				<Navbar />
 				<span
@@ -388,7 +388,11 @@ function RouteComponent() {
 							aria-label={t("app.common.loading")}
 						/>
 					) : (
-						<ArrowRight className="size-4.5" data-icon="inline-start" />
+						<Icon
+							icon="running-man"
+							className="size-4.5"
+							data-icon="inline-start"
+						/>
 					)}
 					<span>{t("app.settings.executeRequest")}</span>
 				</Button>
@@ -416,8 +420,8 @@ function RouteComponent() {
 			</div>
 
 			{/* Desktop: resizable panels */}
-			<div className="hidden h-svh w-full lg:block">
-				<ResizablePanelGroup orientation="horizontal">
+			<div className="hidden h-svh min-h-0 w-full lg:flex">
+				<ResizablePanelGroup orientation="horizontal" className="min-h-0">
 					<ResizablePanel defaultSize="40%" minSize="20%" maxSize="65%">
 						{formPanel}
 					</ResizablePanel>
